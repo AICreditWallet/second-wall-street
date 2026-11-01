@@ -217,3 +217,47 @@ export function LabelProjector({
   });
   return null;
 }
+
+/**
+ * Light beam and expanding ring over buildings whose agents ran in the latest
+ * session. Driven by real run records (CityActivity), never decoration; at most
+ * a handful of meshes, so it stays cheap on mobile GPUs.
+ */
+export function ActivityBeams({ buildings, animate }: { buildings: Building[]; animate: boolean }) {
+  const beamGeo = useMemo(() => new THREE.CylinderGeometry(0.9, 2.4, 1, 20, 1, true).translate(0, 0.5, 0), []);
+  const ringGeo = useMemo(() => new THREE.RingGeometry(0.85, 1, 48).rotateX(-Math.PI / 2), []);
+  const beamMat = useMemo(
+    () => new THREE.MeshBasicMaterial({ color: "#38e1ff", transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }),
+    [],
+  );
+  const ringMat = useMemo(() => new THREE.MeshBasicMaterial({ color: "#8ff0ff", transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }), []);
+  useEffect(() => () => [beamGeo, ringGeo, beamMat, ringMat].forEach((x) => x.dispose()), [beamGeo, ringGeo, beamMat, ringMat]);
+  const rings = useRef<(THREE.Mesh | null)[]>([]);
+
+  useFrame(({ clock }) => {
+    const t = animate ? clock.elapsedTime : 0.5;
+    const phase = (t * 0.45) % 1;
+    rings.current.forEach((m, i) => {
+      if (!m) return;
+      const b = buildings[i]!;
+      const r = Math.max(b.footprint[0], b.footprint[1]) * (0.7 + phase * 1.6);
+      m.scale.set(r, 1, r);
+    });
+    ringMat.opacity = animate ? 0.85 * (1 - phase) : 0.6;
+    beamMat.opacity = animate ? 0.16 + Math.sin(t * 2) * 0.06 : 0.2;
+  });
+
+  return (
+    <group>
+      {buildings.map((b, i) => {
+        const top = roofTop(b);
+        return (
+          <group key={b.id} position={[b.position[0], 0, b.position[1]]}>
+            <mesh geometry={beamGeo} material={beamMat} position={[0, top, 0]} scale={[1, 70, 1]} renderOrder={2} />
+            <mesh ref={(el) => void (rings.current[i] = el)} geometry={ringGeo} material={ringMat} position={[0, top + 0.3, 0]} renderOrder={2} />
+          </group>
+        );
+      })}
+    </group>
+  );
+}

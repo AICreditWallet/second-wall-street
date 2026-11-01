@@ -12,7 +12,8 @@ test.describe("agent marketplace (public)", () => {
     await expect(cards.first()).toContainText("Risk Analyst");
     await page.getByRole("button", { name: /^All/ }).click();
     await page.getByRole("textbox", { name: "Search agents" }).fill("opening");
-    await expect(cards).toHaveCount(2);
+    // Scanner, Opening Range Analyst, and Technical Analyst ("Opening signals").
+    await expect(cards).toHaveCount(3);
   });
 
   test("developer docs explain the protocol", async ({ page }) => {
