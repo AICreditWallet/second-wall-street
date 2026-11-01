@@ -200,6 +200,18 @@ export function BuildingPanel({
               )}
               {org.isDemo && <Badge tone="gold">Demo · simulated data only</Badge>}
             </div>
+            {index.activeBuildings.get(buildingId) && (
+              <div className="mt-3 rounded-xl border border-cyan/30 bg-cyan/5 p-3 text-sm">
+                <p className="font-medium">
+                  <span className="mr-1.5 inline-block size-2 animate-pulse rounded-full bg-cyan align-middle" aria-hidden="true" />
+                  Agents ran for session {index.snapshot.activity?.sessionDate}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-3">
+                  <Link href={`/workflows/${index.activeBuildings.get(buildingId)!.run.runId}`} className="text-cyan-soft hover:underline">Watch the run</Link>
+                  <Link href="/research" className="text-cyan-soft hover:underline">Today&apos;s research</Link>
+                </div>
+              </div>
+            )}
           </section>
         ) : (
           <p className="text-sm leading-relaxed text-fg-muted">

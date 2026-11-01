@@ -99,7 +99,10 @@ test.describe("building → lobby → office → agent journey", () => {
 
     await page.getByRole("button", { name: /Technical Analyst/ }).click();
     await expect(page.getByRole("heading", { name: "Technical Analyst" })).toBeVisible();
-    await expect(page.getByText("Preview listing")).toBeVisible();
+    await expect(page.getByText("This agent is available.")).toBeVisible();
+    // Its latest real task, with a link to the run it belongs to.
+    await expect(page.getByRole("heading", { name: "Latest task" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /See the full run/ })).toHaveAttribute("href", /^\/workflows\//);
     await expect(page.getByRole("link", { name: /Agent profile/ })).toHaveAttribute("href", "/agents/lab-technical-analyst");
 
     // Back out with the browser's back button, then the in-app back control.

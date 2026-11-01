@@ -107,4 +107,16 @@ export interface CitySnapshot {
   ratings?: Record<string, { average: number; count: number }>;
   /** Latest health check per published agent. */
   health?: Record<string, { ok: boolean; checkedAt: string; latencyMs: number | null }>;
+  /** What platform agents actually did in the latest session (null if unavailable). */
+  activity?: CityActivity | null;
+}
+
+export type RunState = "running" | "awaiting_approval" | "succeeded" | "failed" | "cancelled";
+
+export interface CityActivity {
+  sessionDate: string;
+  /** Latest public run per organisation slug. */
+  runs: Record<string, { runId: string; workflowId: string; status: RunState; finishedAt: string | null }>;
+  /** Latest public task per agent. */
+  tasks: Record<string, { runId: string; status: "running" | "succeeded" | "failed" | "skipped"; summary: string | null; at: string }>;
 }
