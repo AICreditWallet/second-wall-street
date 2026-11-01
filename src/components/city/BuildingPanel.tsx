@@ -255,9 +255,16 @@ export function BuildingPanel({
           <h3 id="reviews-h" className="text-xs font-medium uppercase tracking-wider text-fg-subtle">
             Ratings & reviews
           </h3>
-          <p className="mt-2 flex items-center gap-2 text-sm text-fg-muted">
-            <Star className="size-4" aria-hidden="true" /> No reviews yet.
-          </p>
+          {org && index.snapshot.ratings?.[org.id] ? (
+            <Link href={`/orgs/${org.slug}#reviews-h`} className="mt-2 flex items-center gap-2 text-sm text-fg-muted hover:text-fg">
+              <Star className="size-4 fill-gold text-gold" aria-hidden="true" />
+              {index.snapshot.ratings[org.id]!.average.toFixed(1)} · {index.snapshot.ratings[org.id]!.count} review{index.snapshot.ratings[org.id]!.count === 1 ? "" : "s"}
+            </Link>
+          ) : (
+            <p className="mt-2 flex items-center gap-2 text-sm text-fg-muted">
+              <Star className="size-4" aria-hidden="true" /> No reviews yet.
+            </p>
+          )}
         </section>
 
         <Link href={org ? `/orgs/${org.slug}` : `/buildings/${building.id}`} className={buttonClass("secondary", "min-h-10")}>

@@ -103,4 +103,8 @@ export interface CitySnapshot {
   /** Optional overrides from the database; defaults are derived when absent. */
   interiors?: OfficeInterior[];
   workstations?: Workstation[];
+  /** Published review aggregates keyed by agent id or organisation id. */
+  ratings?: Record<string, { average: number; count: number }>;
+  /** Latest health check per published agent. */
+  health?: Record<string, { ok: boolean; checkedAt: string; latencyMs: number | null }>;
 }

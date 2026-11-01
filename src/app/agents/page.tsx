@@ -1,53 +1,56 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Bot } from "lucide-react";
 import { getCitySnapshot } from "@/lib/data/city-repository";
+import { AGENT_CATEGORIES } from "@/lib/agents/catalog";
 import { PageShell } from "@/components/site/page-shell";
-import { Badge } from "@/components/ui/badge";
+import { AgentDirectory, type DirectoryAgent } from "@/components/marketplace/AgentDirectory";
 
-// Re-render at most once a minute (and immediately after claims via revalidatePath).
+// Re-render at most once a minute (and immediately after changes via revalidatePath).
 export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "AI Agents",
-  description: "Browse AI agents in Second Wall Street: research, analysis, education and developer tools.",
+  description: "Browse AI agents in Second Wall Street: research, analysis, education and developer tools — with ratings and live health status.",
   alternates: { canonical: "/agents" },
 };
 
 export default async function AgentsPage() {
   const snapshot = await getCitySnapshot();
   const orgs = new Map(snapshot.organizations.map((o) => [o.id, o]));
+  const agents: DirectoryAgent[] = snapshot.agents.flatMap((a) => {
+    const org = orgs.get(a.organizationId);
+    if (!org) return [];
+    return [
+      {
+        id: a.id,
+        slug: a.slug,
+        name: a.name,
+        summary: a.summary,
+        category: a.category,
+        status: a.status,
+        orgName: org.name,
+        orgSlug: org.slug,
+        community: org.operator === "community",
+        rating: snapshot.ratings?.[a.id],
+        health: snapshot.health?.[a.id],
+      },
+    ];
+  });
+
   return (
     <PageShell
       eyebrow="AI agents"
       title="The agent directory"
-      intro={<p>The first agents are operated by the platform and still in development. Community agents will be listed here as developers publish them.</p>}
+      intro={
+        <p>
+          Agents built by organisations in the district. Health checks and reviews are real; statuses say honestly whether an agent is live.{" "}
+          <Link href="/developers" className="text-cyan-soft hover:underline">
+            List your own agent →
+          </Link>
+        </p>
+      }
     >
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {snapshot.agents.map((a) => {
-          const org = orgs.get(a.organizationId);
-          return (
-            <li key={a.id} className="flex flex-col rounded-2xl border border-line bg-ink-900 p-5">
-              <div className="flex items-center justify-between">
-                <Bot className="size-5 text-cyan" aria-hidden="true" />
-                <Badge>{a.status === "in-development" ? "In development" : a.status === "preview" ? "Preview" : "Live"}</Badge>
-              </div>
-              <h2 className="mt-4 font-medium">
-                <Link href={`/agents/${a.slug}`} className="hover:underline">
-                  {a.name}
-                </Link>
-              </h2>
-              {org && (
-                <Link href={`/orgs/${org.slug}`} className="text-xs text-fg-subtle hover:text-fg">
-                  {org.name}
-                </Link>
-              )}
-              <p className="mt-2 flex-1 text-sm text-fg-muted">{a.summary}</p>
-              <p className="mt-3 text-xs text-fg-subtle">{a.category}</p>
-            </li>
-          );
-        })}
-      </ul>
+      <AgentDirectory agents={agents} categories={[...AGENT_CATEGORIES]} />
     </PageShell>
   );
 }

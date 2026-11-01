@@ -58,6 +58,7 @@ export function TextArea({
   label,
   name,
   error,
+  className = "",
   ...props
 }: { label: string; name: string; error?: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
   const id = `f-${name}`;
@@ -66,7 +67,7 @@ export function TextArea({
       <label htmlFor={id} className="mb-1.5 block text-sm font-medium">
         {label}
       </label>
-      <textarea id={id} name={name} aria-invalid={Boolean(error)} className={`${inputClass} min-h-28`} {...props} />
+      <textarea id={id} name={name} aria-invalid={Boolean(error)} className={`${inputClass} min-h-28 ${className}`} {...props} />
       {error && <p className="mt-1.5 text-xs text-danger">{error}</p>}
     </div>
   );
