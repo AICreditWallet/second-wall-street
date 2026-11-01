@@ -74,6 +74,19 @@ export const getCitySnapshot = cache(async (): Promise<CitySnapshot> => {
   const interiors: OfficeInterior[] = interiorRows.error
     ? []
     : interiorRows.data.map((r) => ({ officeId: r.office_id, template: r.template as InteriorTemplate, accent: r.accent_color }));
+  // Marketplace data (Phase 3 migration); absent tables simply mean "none yet".
+  const publishedIds = (agents.data ?? []).map((a) => a.id as string);
+  const [statRows, healthRows] = await Promise.all([
+    db.from("review_stats").select("target_id, review_count, average_rating"),
+    publishedIds.length
+      ? db.from("agent_health_checks").select("agent_id, ok, checked_at, latency_ms").in("agent_id", publishedIds).order("checked_at", { ascending: false }).limit(1000)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  const ratings: NonNullable<CitySnapshot["ratings"]> = {};
+  if (!statRows.error) for (const r of statRows.data) ratings[r.target_id] = { average: Number(r.average_rating), count: r.review_count };
+  const health: NonNullable<CitySnapshot["health"]> = {};
+  if (!healthRows.error) for (const h of healthRows.data ?? []) health[h.agent_id] ??= { ok: h.ok, checkedAt: h.checked_at, latencyMs: h.latency_ms };
+
   const workstations: Workstation[] = workstationRows.error
     ? []
     : workstationRows.data.map((r) => ({ officeId: r.office_id, slot: r.slot, agentId: r.agent_id }));
@@ -86,6 +99,8 @@ export const getCitySnapshot = cache(async (): Promise<CitySnapshot> => {
     source: "database",
     interiors,
     workstations,
+    ratings,
+    health,
     districts: districts.data!.map(
       (d): District => ({ id: d.id, slug: d.slug, name: d.name, tagline: d.tagline, center: [d.center_x, d.center_z] }),
     ),

@@ -5,6 +5,7 @@ import { getCitySnapshot } from "@/lib/data/city-repository";
 import { PageShell } from "@/components/site/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
+import { ReviewSection } from "@/components/marketplace/ReviewSection";
 
 export const revalidate = 60;
 
@@ -85,7 +86,11 @@ export default async function OrgPage({ params }: { params: Promise<{ slug: stri
                 <Bot className="size-5 text-cyan" aria-hidden="true" />
                 <Badge>{a.status === "in-development" ? "In development" : a.status === "preview" ? "Preview" : "Live"}</Badge>
               </div>
-              <h3 className="mt-4 font-medium">{a.name}</h3>
+              <h3 className="mt-4 font-medium">
+                <a href={`/agents/${a.slug}`} className="hover:underline">
+                  {a.name}
+                </a>
+              </h3>
               <p className="text-xs text-fg-subtle">{a.category}</p>
               <p className="mt-2 text-sm text-fg-muted">{a.summary}</p>
               {a.disclosure && <p className="mt-3 border-t border-line pt-3 text-xs text-fg-subtle">{a.disclosure}</p>}
@@ -93,8 +98,14 @@ export default async function OrgPage({ params }: { params: Promise<{ slug: stri
           ))}
         </ul>
       )}
-      <h2 className="mt-12 text-lg font-semibold">Ratings & reviews</h2>
-      <p className="mt-2 text-sm text-fg-muted">No reviews yet. Reviews open with user accounts.</p>
+      {snapshot.source === "database" ? (
+        <ReviewSection target={`organization:${org.id}`} path={`/orgs/${org.slug}`} average={snapshot.ratings?.[org.id]?.average} count={snapshot.ratings?.[org.id]?.count} />
+      ) : (
+        <>
+          <h2 className="mt-12 text-lg font-semibold">Ratings & reviews</h2>
+          <p className="mt-2 text-sm text-fg-muted">No reviews yet.</p>
+        </>
+      )}
     </PageShell>
   );
 }

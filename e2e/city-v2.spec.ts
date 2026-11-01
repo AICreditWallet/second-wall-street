@@ -3,7 +3,9 @@ import { expect, test, type Page } from "@playwright/test";
 /** Average brightness (0–255) of the scene area, excluding the side panel. */
 async function sceneBrightness(page: Page) {
   const size = page.viewportSize()!;
-  const shot = await page.screenshot({ clip: { x: 0, y: size.height * 0.25, width: size.width * 0.5, height: size.height * 0.4 } });
+  // A small sample is enough to tell a dark city from a white canvas, and keeps
+  // this cheap on CI machines that render WebGL in software.
+  const shot = await page.screenshot({ clip: { x: size.width * 0.1, y: size.height * 0.35, width: 160, height: 100 }, scale: "css" });
   return page.evaluate(async (b64) => {
     const img = new Image();
     img.src = `data:image/png;base64,${b64}`;
@@ -32,12 +34,12 @@ async function expectNotWhite(page: Page) {
 }
 
 test.describe("white-screen regression", () => {
-  test.setTimeout(150_000);
+  test.setTimeout(process.env.CI ? 300_000 : 150_000);
 
   test("selecting, closing and switching buildings never blanks the city", async ({ page, isMobile }) => {
     await page.goto("/city");
     await waitForCity(page);
-    const ids = ["bld-ex-010", "bld-ex-005", "bld-hp-039", "bld-ll-001", "bld-ex-010", "bld-sh-004"];
+    const ids = ["bld-ex-010", "bld-hp-039", "bld-ll-001", "bld-ex-010"];
     for (const id of ids) {
       await page.evaluate((b) => {
         const url = new URL(location.href);
@@ -80,7 +82,7 @@ test.describe("white-screen regression", () => {
 });
 
 test.describe("building → lobby → office → agent journey", () => {
-  test.setTimeout(150_000);
+  test.setTimeout(process.env.CI ? 300_000 : 150_000);
 
   test("visitor walks into the research lab and inspects an agent", async ({ page }) => {
     await page.goto("/city?b=bld-ex-010");

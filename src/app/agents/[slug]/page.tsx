@@ -7,6 +7,7 @@ import { floorDirectory } from "@/lib/city/interiors";
 import { PageShell } from "@/components/site/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
+import { HealthBadge, ReviewSection, Stars } from "@/components/marketplace/ReviewSection";
 
 export const revalidate = 60;
 
@@ -36,12 +37,19 @@ export default async function AgentPage({ params }: { params: Promise<{ slug: st
   if (!agent) notFound();
   const org = snapshot.organizations.find((o) => o.id === agent.organizationId);
   const hq = floorDirectory(snapshot.offices.filter((o) => o.organizationId === agent.organizationId))[0];
+  const rating = snapshot.ratings?.[agent.id];
 
   return (
     <PageShell eyebrow="AI agent" title={agent.name} intro={<p>{agent.summary}</p>}>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Badge tone={agent.status === "live" ? "cyan" : "gold"}>{STATUS[agent.status]}</Badge>
         <Badge>{agent.category}</Badge>
+        {org?.operator === "community" && <HealthBadge health={snapshot.health?.[agent.id]} />}
+        {rating && (
+          <span className="inline-flex items-center gap-1.5 text-sm text-fg-muted">
+            <Stars value={rating.average} /> {rating.average.toFixed(1)} ({rating.count})
+          </span>
+        )}
       </div>
       <p className="mt-6 flex max-w-xl gap-2 rounded-2xl border border-line bg-ink-900 px-4 py-3 text-sm text-fg-muted">
         <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" /> {NOTE[agent.status]}
@@ -72,6 +80,7 @@ export default async function AgentPage({ params }: { params: Promise<{ slug: st
           <ButtonLink href={`/city?b=${hq.buildingId}&office=${hq.id}`}>See its workstation in 3D</ButtonLink>
         </div>
       )}
+      {snapshot.source === "database" && <ReviewSection target={`agent:${agent.id}`} path={`/agents/${agent.slug}`} average={rating?.average} count={rating?.count} />}
     </PageShell>
   );
 }
