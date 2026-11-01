@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Building, BuildingIndicator } from "@/lib/city/types";
@@ -82,6 +82,7 @@ export function Highlight({ building, tone }: { building: Building; tone: "selec
     base.dispose();
     return edges;
   }, [building, top]);
+  useEffect(() => () => geo.dispose(), [geo]);
   const color = tone === "selected" ? "#38e1ff" : "#cfe9ff";
   return (
     <group position={[building.position[0], 0, building.position[1]]}>
@@ -101,32 +102,117 @@ export function Highlight({ building, tone }: { building: Building; tone: "selec
 export interface LabelAnchor {
   id: string;
   position: [number, number, number];
+  kind: "district" | "building";
+  /** Higher wins when labels overlap. */
+  priority: number;
+  /** Building this label belongs to (ignored for its own occlusion test). */
+  buildingId?: string;
+  /** Always shown (flagships, occupied buildings). */
+  pinned?: boolean;
 }
 
+export interface LabelFocus {
+  hoveredId: string | null;
+  selectedId: string | null;
+  hidden: boolean;
+  /** Building view: only the selected building keeps its label. */
+  isolate: boolean;
+}
+
+const ray = new THREE.Ray();
+const box = new THREE.Box3();
+const hit = new THREE.Vector3();
+
 /**
- * Projects world-space anchors to screen space and moves plain DOM labels
- * (rendered outside the canvas) every frame. Avoids one React root per label.
+ * Projects anchors to screen space and positions plain DOM labels (rendered
+ * outside the canvas). Handles zoom-based visibility, occlusion by buildings
+ * and overlap: higher-priority labels win, the rest are hidden.
  */
 export function LabelProjector({
   anchors,
   elements,
+  buildings,
+  focus,
 }: {
   anchors: LabelAnchor[];
   elements: RefObject<Map<string, HTMLElement>>;
+  buildings: Building[];
+  focus: RefObject<LabelFocus>;
 }) {
   const v = useMemo(() => new THREE.Vector3(), []);
-  useFrame(({ camera, size }) => {
+  const boxes = useMemo(
+    () =>
+      buildings.map((b) => ({
+        id: b.id,
+        box: new THREE.Box3(
+          new THREE.Vector3(b.position[0] - b.footprint[0] / 2, 0, b.position[1] - b.footprint[1] / 2),
+          new THREE.Vector3(b.position[0] + b.footprint[0] / 2, roofTop(b), b.position[1] + b.footprint[1] / 2),
+        ),
+      })),
+    [buildings],
+  );
+  const frame = useRef(0);
+
+  useFrame(({ camera, size, controls }) => {
+    // Re-layout every other frame; positions in between follow the camera smoothly enough.
+    frame.current++;
+    const f = focus.current;
+    const target = (controls as unknown as { target?: THREE.Vector3 } | null)?.target;
+    const dist = target ? camera.position.distanceTo(target) : 300;
+    const placed: { x0: number; y0: number; x1: number; y1: number }[] = [];
+    const items: { a: LabelAnchor; el: HTMLElement; x: number; y: number; pr: number; d: number }[] = [];
+
     for (const a of anchors) {
       const el = elements.current?.get(a.id);
       if (!el) continue;
-      v.set(a.position[0], a.position[1], a.position[2]).project(camera);
-      const hidden = v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1;
-      el.style.opacity = hidden ? "0" : "1";
-      if (!hidden) {
-        const x = ((v.x + 1) / 2) * size.width;
-        const y = ((1 - v.y) / 2) * size.height;
-        el.style.transform = `translate(-50%, -50%) translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+      const isFocus = a.buildingId && (a.buildingId === f?.selectedId || a.buildingId === f?.hoveredId);
+      let show = !f?.hidden && (!f?.isolate || a.buildingId === f.selectedId);
+      if (a.kind === "district") show &&= dist > 230; // zoomed in: street names take over
+      else if (!isFocus && !a.pinned) show &&= dist < 170 && Boolean(target) && Math.hypot(a.position[0] - target!.x, a.position[2] - target!.z) < 110;
+      if (!show) {
+        el.style.opacity = "0";
+        continue;
       }
+      v.set(a.position[0], a.position[1], a.position[2]).project(camera);
+      if (v.z > 1 || Math.abs(v.x) > 1.05 || Math.abs(v.y) > 1.05) {
+        el.style.opacity = "0";
+        continue;
+      }
+      const d = camera.position.distanceTo(new THREE.Vector3(...a.position));
+      items.push({ a, el, x: ((v.x + 1) / 2) * size.width, y: ((1 - v.y) / 2) * size.height, pr: (isFocus ? 1000 : 0) + a.priority - d * 0.01, d });
+    }
+
+    items.sort((p, q) => q.pr - p.pr);
+    for (const it of items) {
+      // Occlusion: hide building labels sitting behind other buildings.
+      if (it.a.kind === "building" && frame.current % 2 === 0) {
+        ray.origin.copy(camera.position);
+        ray.direction.set(it.a.position[0], it.a.position[1], it.a.position[2]).sub(camera.position).normalize();
+        let blocked = false;
+        for (const b of boxes) {
+          if (b.id === it.a.buildingId) continue;
+          box.copy(b.box);
+          if (ray.intersectBox(box, hit) && hit.distanceTo(camera.position) < it.d - 2) {
+            blocked = true;
+            break;
+          }
+        }
+        it.el.dataset.occluded = blocked ? "1" : "";
+      }
+      const occluded = it.el.dataset.occluded === "1";
+      const w = it.el.offsetWidth || 80;
+      const h = it.el.offsetHeight || 20;
+      const rect = { x0: it.x - w / 2 - 4, y0: it.y - h / 2 - 2, x1: it.x + w / 2 + 4, y1: it.y + h / 2 + 2 };
+      const overlaps = placed.some((p) => rect.x0 < p.x1 && rect.x1 > p.x0 && rect.y0 < p.y1 && rect.y1 > p.y0);
+      const isFocus = it.pr >= 1000;
+      if ((overlaps || occluded) && !isFocus) {
+        it.el.style.opacity = "0";
+        continue;
+      }
+      placed.push(rect);
+      it.el.style.opacity = "1";
+      it.el.dataset.focus = isFocus ? "1" : "";
+      it.el.style.transform = `translate(-50%, -50%) translate(${it.x.toFixed(1)}px, ${it.y.toFixed(1)}px)`;
     }
   });
   return null;

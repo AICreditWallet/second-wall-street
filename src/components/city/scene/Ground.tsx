@@ -1,10 +1,10 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { CitySnapshot } from "@/lib/city/types";
 import { mulberry32 } from "@/lib/city/generator";
-import { glowTexture } from "./textures";
+import { glowTexture, lightPoolTexture } from "./textures";
 import type { StreetLayout } from "./layout";
 
 type Placement = { x: number; y: number; z: number; sx?: number; sy?: number; sz?: number; ry?: number; color?: string };
@@ -48,27 +48,18 @@ export function Ground({ snapshot, layout }: { snapshot: CitySnapshot; layout: S
 
   const mats = useMemo(
     () => ({
-      asphalt: new THREE.MeshStandardMaterial({ color: "#0a1120", roughness: 0.95 }),
-      sidewalk: new THREE.MeshStandardMaterial({ color: "#1a2438", roughness: 0.9 }),
+      asphalt: new THREE.MeshStandardMaterial({ color: "#111a2d", roughness: 0.95 }),
+      sidewalk: new THREE.MeshStandardMaterial({ color: "#212c44", roughness: 0.9 }),
       grass: new THREE.MeshStandardMaterial({ color: "#123a2a", roughness: 1 }),
       path: new THREE.MeshStandardMaterial({ color: "#2a3448", roughness: 0.9 }),
-      marking: new THREE.MeshBasicMaterial({ color: "#8a7a4a", toneMapped: false }),
-      crosswalk: new THREE.MeshBasicMaterial({ color: "#4a5570", toneMapped: false }),
+      marking: new THREE.MeshBasicMaterial({ color: "#c2a865", toneMapped: false }),
+      crosswalk: new THREE.MeshBasicMaterial({ color: "#6b7894", toneMapped: false }),
       trunk: new THREE.MeshStandardMaterial({ color: "#3a2a20" }),
       crown: new THREE.MeshStandardMaterial({ color: "#1f6a44", roughness: 0.8 }),
       water: new THREE.MeshStandardMaterial({ color: "#061a30", roughness: 0.2, metalness: 0.7, emissive: "#03101f" }),
       pier: new THREE.MeshStandardMaterial({ color: "#2a3346", roughness: 0.9 }),
       post: new THREE.MeshStandardMaterial({ color: "#1b2233", metalness: 0.5, roughness: 0.5 }),
       bulb: new THREE.MeshBasicMaterial({ color: "#ffd9a0", toneMapped: false }),
-      pool: new THREE.MeshBasicMaterial({
-        map: glowTexture(),
-        color: "#ffae55",
-        transparent: true,
-        opacity: 0.32,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        toneMapped: false,
-      }),
       glint: new THREE.MeshBasicMaterial({
         map: glowTexture(),
         color: "#38e1ff",
@@ -161,9 +152,40 @@ export function Ground({ snapshot, layout }: { snapshot: CitySnapshot; layout: S
       lamps.push({ x: shoreX + 2.4, y: 0.35, z });
       if (rand() < 0.7) trees.push({ x: shoreX - 0.5, y: 0.35, z: z + 4.5, sx: 0.8, sy: 0.8, sz: 0.8 });
     }
-    const pools = lamps.map((l) => ({ ...l, y: 0.4, sx: 7, sy: 1, sz: 7 }));
-    return { slabs, grass, paths, trees, markings, crosswalks, lamps, pools };
+    return { slabs, grass, paths, trees, markings, crosswalks, lamps };
   }, [layout, parkKeys, block, extent, roadsX, roadsZ, street]);
+
+  const poolExtent = useMemo(
+    () => ({ minX: extent.minX - 4, maxX: extent.maxX + 12, minZ: extent.minZ - 4, maxZ: extent.maxZ + 4 }),
+    [extent],
+  );
+  const poolMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        map: lightPoolTexture(data.lamps.map((l) => ({ x: l.x, z: l.z })), poolExtent),
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        toneMapped: false,
+      }),
+    [data.lamps, poolExtent],
+  );
+
+  // Free GPU memory when the scene unmounts (switching views, navigating away).
+  useEffect(
+    () => () => {
+      poolMaterial.map?.dispose();
+      poolMaterial.dispose();
+    },
+    [poolMaterial],
+  );
+  useEffect(
+    () => () => {
+      Object.values(mats).forEach((m) => m.dispose());
+      Object.values(geos).forEach((g) => g.dispose());
+    },
+    [mats, geos],
+  );
 
   const water = snapshot.water;
   const shoreX = extent.maxX + 3;
@@ -201,7 +223,8 @@ export function Ground({ snapshot, layout }: { snapshot: CitySnapshot; layout: S
       <Instances items={data.crosswalks} geometry={geos.flat} material={mats.crosswalk} />
       <Instances items={data.lamps} geometry={geos.post} material={mats.post} />
       <Instances items={data.lamps} geometry={geos.bulb} material={mats.bulb} />
-      <Instances items={data.pools} geometry={geos.flat} material={mats.pool} />
+      {/* All lamp light pools baked into one additive quad (was ~500 overlapping planes). */}
+      <mesh geometry={geos.flat} material={poolMaterial} position={[(poolExtent.minX + poolExtent.maxX) / 2, 0.4, (poolExtent.minZ + poolExtent.maxZ) / 2]} scale={[poolExtent.maxX - poolExtent.minX, 1, poolExtent.maxZ - poolExtent.minZ]} renderOrder={1} />
     </group>
   );
 }

@@ -30,6 +30,7 @@ export function useCameraState() {
 
 export type CameraCommand =
   | { type: "focus-building"; id: string }
+  | { type: "building-view"; id: string }
   | { type: "focus-point"; x: number; z: number; distance?: number }
   | { type: "view"; view: "aerial" | "street" }
   | { type: "reset" }

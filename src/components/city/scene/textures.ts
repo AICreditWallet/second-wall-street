@@ -100,3 +100,65 @@ export function glowTexture() {
   glow = finish(c);
   return glow;
 }
+
+/**
+ * One baked texture holding every street-lamp light pool. Replaces ~500
+ * overlapping additive planes (huge GPU overdraw up close) with one quad.
+ */
+export function lightPoolTexture(
+  lamps: { x: number; z: number }[],
+  extent: { minX: number; maxX: number; minZ: number; maxZ: number },
+  size = 2048,
+) {
+  const c = canvas(size);
+  const g = c.getContext("2d")!;
+  g.fillStyle = "#000";
+  g.fillRect(0, 0, size, size);
+  const w = extent.maxX - extent.minX;
+  const d = extent.maxZ - extent.minZ;
+  const r = (3.6 / w) * size;
+  g.globalCompositeOperation = "lighter";
+  for (const l of lamps) {
+    const px = ((l.x - extent.minX) / w) * size;
+    const py = ((l.z - extent.minZ) / d) * size;
+    const grad = g.createRadialGradient(px, py, 0, px, py, r);
+    grad.addColorStop(0, "rgba(255,174,85,0.55)");
+    grad.addColorStop(0.45, "rgba(255,150,70,0.22)");
+    grad.addColorStop(1, "rgba(255,140,60,0)");
+    g.fillStyle = grad;
+    g.fillRect(px - r, py - r, r * 2, r * 2);
+  }
+  const t = finish(c);
+  t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
+  return t;
+}
+
+/** Crisp text on a transparent canvas, for road-surface street names and signs. */
+export function textTexture(text: string, opts: { font?: string; color?: string; height?: number; padding?: number; background?: string } = {}) {
+  const height = opts.height ?? 64;
+  const font = opts.font ?? `600 ${Math.round(height * 0.62)}px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`;
+  const measure = document.createElement("canvas").getContext("2d")!;
+  measure.font = font;
+  const pad = opts.padding ?? height * 0.35;
+  const width = Math.ceil(measure.measureText(text).width + pad * 2);
+  const c = document.createElement("canvas");
+  c.width = width;
+  c.height = height;
+  const g = c.getContext("2d")!;
+  if (opts.background) {
+    g.fillStyle = opts.background;
+    g.beginPath();
+    g.roundRect(0, 0, width, height, height / 2);
+    g.fill();
+  }
+  g.font = font;
+  g.fillStyle = opts.color ?? "#e8eefc";
+  g.textBaseline = "middle";
+  g.fillText(text, pad, height / 2 + 1);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  t.generateMipmaps = true;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  return { texture: t, aspect: width / height };
+}
