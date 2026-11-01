@@ -19,6 +19,11 @@ Easiest (no tools): SQL Editor → paste and run each file in order:
 4. `supabase/migrations/20261101000400_storage.sql`
 5. `supabase/seed.sql`
 
+If you copy files with the macOS clipboard from a terminal, use UTF-8
+(`LANG=en_US.UTF-8 pbcopy < file.sql`). Without it, dashes and other
+non-ASCII characters are garbled — this happened once; see
+`supabase/repairs/20261101_fix_text_encoding.sql`.
+
 Or with the Supabase CLI: `supabase link --project-ref <ref>` then `supabase db push` and run `seed.sql`.
 
 ## 3. Authentication settings
