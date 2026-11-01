@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle2, Circle, MailWarning, MapPin } from "lucide-react";
+import { Bot, CheckCircle2, Circle, MailWarning, MapPin, Plus } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { getMyOrganizations } from "@/lib/data/my-organization";
+import { getMyAgents } from "@/lib/data/my-agents";
+import { AGENT_STATUS_LABEL } from "@/lib/agents/catalog";
 import { TIER_LABEL } from "@/lib/city/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PageShell } from "@/components/site/page-shell";
@@ -20,12 +22,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const primary = mine.find((m) => m.role === "owner") ?? mine[0];
   const offices = mine.flatMap((m) => m.offices.map((o) => ({ ...o, org: m.org, role: m.role })));
   const profileDone = Boolean(primary && primary.org.description && primary.org.logoUrl);
+  const agents = supabase ? await getMyAgents(supabase, mine.map((m) => m.org.id)) : [];
+  const canAddAgents = mine.some((m) => (m.role === "owner" || m.role === "admin") && m.offices.length > 0);
 
   const steps = [
     { done: user.emailVerified, label: "Verify your email" },
     { done: offices.length > 0, label: "Claim a free office", href: "/city?filter=free" },
     { done: profileDone, label: "Add a description and logo", href: "/dashboard/organization" },
-    { done: false, label: "Publish your first AI agent", soon: true },
+    { done: agents.some((a) => a.published), label: "Publish your first AI agent", href: canAddAgents ? (agents[0] ? `/dashboard/agents/${agents[0].id}` : "/dashboard/agents/new") : undefined },
   ];
 
   return (
@@ -87,6 +91,41 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             </ul>
           )}
 
+          <section aria-labelledby="agents-h" className="space-y-3 pt-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 id="agents-h" className="text-lg font-semibold">
+                AI agents
+              </h2>
+              {canAddAgents && (
+                <ButtonLink href="/dashboard/agents/new" variant="secondary" className="min-h-10">
+                  <Plus className="size-4" aria-hidden="true" /> Register an agent
+                </ButtonLink>
+              )}
+            </div>
+            {agents.length === 0 ? (
+              <p className="rounded-3xl border border-dashed border-line-strong p-6 text-sm text-fg-muted">
+                {canAddAgents ? "No agents yet. Register one to list it in the directory and show it working in your office." : "Claim an office to register AI agents."}
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {agents.map((a) => (
+                  <li key={a.id}>
+                    <Link href={`/dashboard/agents/${a.id}`} className="flex items-center gap-3 rounded-2xl border border-line bg-ink-900 p-4 hover:border-cyan/40">
+                      <Bot className="size-5 shrink-0 text-cyan" aria-hidden="true" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">{a.name}</span>
+                        <span className="block text-xs text-fg-muted">
+                          {AGENT_STATUS_LABEL[a.status]} · {a.published ? "Published" : "Hidden"} ·{" "}
+                          {a.health ? (a.health.ok ? "Healthy" : "Health check failing") : "Not checked yet"}
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
           {primary && (
             <div className="rounded-3xl border border-line bg-ink-900 p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -119,7 +158,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 ) : (
                   <span className={s.done ? "text-fg-muted line-through" : ""}>{s.label}</span>
                 )}
-                {s.soon && <span className="ml-auto text-xs text-fg-subtle">Soon</span>}
               </li>
             ))}
           </ol>

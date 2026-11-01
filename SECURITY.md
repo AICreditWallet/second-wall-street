@@ -18,6 +18,9 @@ Please report security issues privately to **security@secondwallstreet.com** (ma
 | Account takeover / enumeration | Supabase Auth (bcrypt, PKCE), email verification, 10+ char passwords, generic sign-in/reset messages, `getUser()`/`getClaims()` validation on the server. |
 | Open redirects / host-header attacks | `next` parameters must be same-site paths; auth callback URLs built from the configured site URL, not request headers. |
 | CSRF | Server Actions check the Origin header; cookies are `SameSite=Lax`. |
+| Agents attacking our network (SSRF) | Agents are called only server-side via `src/lib/agents/caller.ts`: HTTPS/443 only, no credentials in URLs, private/loopback/link-local/metadata ranges blocked **at connection time** (defeats DNS rebinding), no redirects, 6 s timeout, 256 KB cap, 3 calls/agent/minute. Verified against real endpoints (incl. a public domain resolving to 127.0.0.1). |
+| Leaked agent tokens | Stored in Supabase Vault via `set_agent_secret`; decryptable only by the server's service role (`get_agent_secret`); never returned to browsers, only replaceable. |
+| Fake "Live" agents / review abuse | DB trigger: Live requires a passing health check < 24 h old; plan agent limits; one review per person per target, verified email, no reviewing your own organisation, 10 reviews/day, author forced to the caller, moderation and reports. |
 | XSS / clickjacking | CSP, `X-Frame-Options: DENY`, React escaping (user text is never rendered as HTML), user links get `rel="nofollow ugc noopener noreferrer"` and must be `https://`. |
 
 Database security is covered by `supabase/tests/database.test.ts`, which runs the real migrations on Postgres (PGlite) and attacks them as anonymous and signed-in users.
@@ -31,5 +34,5 @@ Scripts use `'unsafe-inline'` instead of per-request nonces so public pages rema
 - Rate limiting at the edge (Vercel Firewall / WAF rules) for auth and form endpoints, in addition to Supabase's auth limits.
 - Team member invitations (members table exists; no invite flow yet).
 - Admin dashboard and moderation queue (tables and policies exist).
-- Agent calls: server-side only, SSRF guard, timeouts, size caps, budgets (Phase 3).
+- Moderation queue UI for reports (reports are stored; review hiding works via `moderate_review`).
 - Stripe: verified webhooks, idempotent processing (Phase 6).
