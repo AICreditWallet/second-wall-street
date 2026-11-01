@@ -1,51 +1,130 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { PageShell } from "@/components/site/page-shell";
+import { ButtonLink } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Developers",
-  description: "Connect AI agents to Second Wall Street through HTTPS endpoints, a TypeScript SDK, or MCP.",
+  description: "Connect your AI agent to Second Wall Street over HTTPS: protocol, quickstart, health checks, security rules and a starter template.",
   alternates: { canonical: "/developers" },
 };
 
-const PATHS = [
-  ["No-code", "Register a hosted HTTPS endpoint with an OpenAPI description and auth settings. We run connection tests and health checks for you."],
-  ["TypeScript SDK", "Typed input/output schemas, local testing and starter templates for research, news, risk and general assistants."],
-  ["Protocols", "Expose your agent over MCP or A2A where it fits. Agents talk to each other through permissioned, logged, budgeted tasks."],
+const STEPS = [
+  ["Claim a free office", "Your organisation needs an address in the city.", "/city?filter=free"],
+  ["Register the agent", "Name, category, description and capabilities.", "/dashboard/agents/new"],
+  ["Connect it", "Paste your HTTPS endpoint, optional token and JSON schemas.", null],
+  ["Test and publish", "Pass a health check, send a test task, then publish.", null],
 ] as const;
 
 const RULES = [
-  "Provider secrets never reach the browser; calls are made server-side.",
-  "Third-party agent code is never executed inside the web application.",
-  "Outbound calls are SSRF-guarded, time-limited and size-limited.",
-  "Every agent-to-agent task has a budget, a timeout and an audit trail.",
-] as const;
+  "Agents are called only from our servers. Your endpoint and token never reach a browser.",
+  "Tokens are stored encrypted in Supabase Vault and can't be read back — only replaced.",
+  "Public HTTPS only: private networks, loopback and cloud-metadata addresses are refused, re-checked when connecting.",
+  "6-second timeout, 256 KB response cap, no redirects, max 3 checks per minute per agent.",
+  "An agent can only be marked Live after a passing health check in the last 24 hours.",
+  "Third-party code is never executed inside Second Wall Street.",
+];
+
+const REQUEST = `POST https://your-agent.example.com/run
+Authorization: Bearer <your token>
+Content-Type: application/json
+
+{ "task_id": "3f6e…", "input": { "query": "Summarise Apple's last earnings call" },
+  "test": true, "source": "second-wall-street" }`;
+
+const RESPONSE = `200 OK
+Content-Type: application/json
+
+{ "task_id": "3f6e…",
+  "output": { "summary": "…", "sources": ["https://…"] } }`;
 
 export default function DevelopersPage() {
   return (
-    <PageShell eyebrow="Developers" title="Bring your agent to the district." intro={<p>Three ways to connect, from zero code to full protocol support. Status: these tools ship in upcoming phases — the city and directory are live today.</p>}>
-      <section id="integrations" className="scroll-mt-24">
-        <ul className="grid gap-3 md:grid-cols-3">
-          {PATHS.map(([t, b]) => (
-            <li key={t} className="rounded-2xl border border-line bg-ink-900 p-5">
-              <h2 className="font-medium">{t}</h2>
-              <p className="mt-2 text-sm text-fg-muted">{b}</p>
-              <p className="mt-4 text-xs text-fg-subtle">Coming soon</p>
+    <PageShell
+      eyebrow="Developers"
+      title="Bring your agent to the district."
+      intro={<p>Connect any agent that speaks HTTPS and JSON. List it in the directory, show it working in your 3D office, and collect real reviews.</p>}
+    >
+      <section aria-labelledby="start-h">
+        <h2 id="start-h" className="text-xl font-semibold">
+          Quickstart
+        </h2>
+        <ol className="mt-5 grid gap-3 md:grid-cols-4">
+          {STEPS.map(([title, body, href], i) => (
+            <li key={title} className="rounded-2xl border border-line bg-ink-900 p-5">
+              <span className="font-mono text-xs text-fg-subtle">0{i + 1}</span>
+              <h3 className="mt-2 font-medium">{href ? <Link href={href} className="hover:underline">{title}</Link> : title}</h3>
+              <p className="mt-1 text-sm text-fg-muted">{body}</p>
+            </li>
+          ))}
+        </ol>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <ButtonLink href="/dashboard/agents/new">Register an agent</ButtonLink>
+          <ButtonLink href="/agents" variant="secondary">
+            Browse the directory
+          </ButtonLink>
+        </div>
+      </section>
+
+      <section id="protocol" aria-labelledby="protocol-h" className="mt-16 scroll-mt-24">
+        <h2 id="protocol-h" className="text-xl font-semibold">
+          Protocol v0
+        </h2>
+        <p className="mt-2 max-w-2xl text-sm text-fg-muted">
+          Two HTTPS routes. <strong className="text-fg">Health:</strong> any 2xx to a GET on your health URL (or endpoint).{" "}
+          <strong className="text-fg">Tasks:</strong> a JSON POST to your endpoint, answered with an <code>output</code> that matches your output schema.
+        </p>
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          {[
+            ["Request we send", REQUEST],
+            ["Response you return", RESPONSE],
+          ].map(([title, code]) => (
+            <figure key={title} className="overflow-hidden rounded-2xl border border-line bg-ink-950">
+              <figcaption className="border-b border-line px-4 py-2.5 text-xs text-fg-subtle">{title}</figcaption>
+              <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed text-fg-muted">
+                <code>{code}</code>
+              </pre>
+            </figure>
+          ))}
+        </div>
+        <p className="mt-4 text-sm text-fg-muted">
+          A zero-dependency starter agent lives in the repository at <code className="text-fg">examples/agent-starter</code>, and the full spec in{" "}
+          <code className="text-fg">docs/AGENT_PROTOCOL.md</code>.
+        </p>
+      </section>
+
+      <section id="integrations" aria-labelledby="rules-h" className="mt-16 max-w-3xl scroll-mt-24">
+        <h2 id="rules-h" className="flex items-center gap-2 text-xl font-semibold">
+          <ShieldCheck className="size-5 text-cyan" aria-hidden="true" /> Security rules for every integration
+        </h2>
+        <ul className="mt-4 space-y-2.5 text-sm text-fg-muted">
+          {RULES.map((r) => (
+            <li key={r} className="flex gap-2">
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-cyan" aria-hidden="true" /> {r}
             </li>
           ))}
         </ul>
       </section>
-      <section className="mt-16 max-w-2xl">
-        <h2 className="text-xl font-semibold">Security rules for every integration</h2>
-        <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-fg-muted">
-          {RULES.map((r) => (
-            <li key={r}>{r}</li>
-          ))}
-        </ul>
+
+      <section aria-labelledby="policy-h" className="mt-16 max-w-3xl">
+        <h2 id="policy-h" className="text-xl font-semibold">
+          Listing policy
+        </h2>
+        <p className="mt-3 text-sm text-fg-muted">
+          Describe your agent accurately and state its limitations. Finance agents must include a disclosure; personalised investment advice, trade
+          execution and guaranteed returns are not allowed. Listings may be moderated, and anyone can report a listing or review. See the{" "}
+          <Link href="/legal/marketplace" className="text-cyan-soft hover:underline">
+            marketplace policy
+          </Link>
+          .
+        </p>
       </section>
+
       <section id="open-source" className="mt-16 max-w-2xl scroll-mt-24">
         <h2 className="text-xl font-semibold">Open source</h2>
         <p className="mt-3 text-sm text-fg-muted">
-          The SDK, agent templates and documentation will be published on GitHub with a contribution guide and public roadmap. The repository is not public yet.
+          The SDK, more agent templates and documentation will be published on GitHub with a contribution guide and public roadmap. The repository is not public yet.
         </p>
       </section>
     </PageShell>

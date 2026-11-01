@@ -17,5 +17,5 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Public pages are not matched so they stay static and cacheable.
-  matcher: ["/dashboard/:path*", "/account/:path*", "/claim/:path*", "/auth/:path*", "/api/me", "/sign-in", "/sign-up"],
+  matcher: ["/dashboard/:path*", "/account/:path*", "/claim/:path*", "/auth/:path*", "/api/me", "/api/reviews", "/sign-in", "/sign-up"],
 };
