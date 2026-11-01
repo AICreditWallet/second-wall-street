@@ -2,6 +2,16 @@
 
 _Last updated: 2026-11-01_
 
+## Live infrastructure (set up 2026-11-01)
+| Service | Where | Notes |
+|---|---|---|
+| GitHub | github.com/AICreditWallet/second-wall-street (private) | Branch protection needs GitHub Pro for private repos — not enabled |
+| Supabase | org "Second Wall Street" (Free), project `second-wall-street`, ref `ofxzpstohgluhbmmrkcz`, East US | Migrations + seed applied and verified; auth: email confirm, 10+ char passwords, GitHub OAuth |
+| Vercel | team "ten's projects" (Hobby), project `second-wall-street` | Auto-deploys `main`; Supabase keys synced by the official integration (scoped to this project only) |
+| DNS (GoDaddy) | A `@` → 216.198.79.1, CNAME `www` → Vercel | secondwallstreet.com is canonical; www 308-redirects to it |
+
+Owner to-dos: Vercel Pro before commercial launch (Hobby is non-commercial); custom SMTP for branded auth emails; GitHub Pro if branch protection is wanted.
+
 ## Phase 0 + 1 — done (2026-10-31)
 Architecture, design system, landing page, interactive 3D city, office panels, 2D fallback, directory, SEO pages. See ARCHITECTURE.md.
 
@@ -24,9 +34,8 @@ Tests (all passing):
 Not verified yet (needs your Supabase project): real GitHub/email sign-in, emails, the claim against a hosted database, logo upload to Supabase Storage.
 
 ## Owner actions needed now
-1. Follow `docs/SUPABASE_SETUP.md` for a **staging** project (≈20 minutes), add the keys to `.env.local` yourself, then tell me — I'll run the full account E2E suite.
-2. Create a GitHub OAuth App (steps in the same doc).
-3. Still open from Phase 1: GitHub repo name, Vercel project, licence decision.
+1. Licence decision (open from Phase 1).
+2. A separate staging Supabase project for the destructive account E2E suite (production must never be used for it).
 
 ## Known limitations / deferred
 - Team member invitations, admin dashboard, moderation queue UI (schema ready).
