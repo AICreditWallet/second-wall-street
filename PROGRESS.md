@@ -12,7 +12,7 @@ _Last updated: 2026-11-01_
 
 Owner to-dos: Vercel Pro before commercial launch (Hobby is non-commercial); custom SMTP for branded auth emails; GitHub Pro if branch protection is wanted.
 
-## 3D City v2 — on branch `city-v2` (not deployed to production)
+## 3D City v2 — live in production (merged 2026-11-01, PR #6)
 
 **White-screen bug — root cause found and fixed.**
 - Reproduced: forcing a WebGL context loss produces exactly the reported screen (white canvas, labels and panel still visible).
@@ -41,11 +41,15 @@ Owner to-dos: Vercel Pro before commercial launch (Hobby is non-commercial); cus
 - Breadcrumbs and Back everywhere; the URL keeps the place (`?b=…&view=lobby`, `&office=…`) so links, refresh and the browser back button work.
 - One WebGL canvas for everything, with no reloads; interiors are code-split.
 
-**Database (written and tested, NOT applied to production).** `supabase/migrations/20261102000100_office_interiors.sql` adds `office_interiors` (layout template and accent) and `agent_workstations`, both with RLS. The app works without it, deriving defaults.
+**Database (applied to production 2026-11-01, verified).** `supabase/migrations/20261102000100_office_interiors.sql` adds `office_interiors` (layout template and accent) and `agent_workstations`, both with RLS: 7 policies, visitors read-only, all 179 offices and their ownership unchanged.
+
+**Data incident, fixed.** The original seed was pasted without UTF-8, garbling dashes ("Floors 22‚Äì27"). `supabase/repairs/20261101_fix_text_encoding.sql` (tested on Postgres) restored all seeded text. Production now reports `still_garbled = 0`, and all 142 sitemap pages are clean.
+
+**Live verification:** the full Playwright suite (36 tests, desktop + mobile) passes against https://secondwallstreet.com (`E2E_BASE_URL=https://secondwallstreet.com npm run test:e2e`).
 
 **Tests:** 72 unit/DB tests (28 attack the SQL/RLS), 36 E2E tests, typecheck, lint and build all pass.
 
-**Needs owner approval:** merge `city-v2` to `main` (deploys to production) and apply the new migration in Supabase.
+**Next:** let office owners pick their layout and place agents from the dashboard (tables and RLS are ready); Phase 3 agent registration.
 
 ## Phase 0 + 1 — done (2026-10-31)
 Architecture, design system, landing page, interactive 3D city, office panels, 2D fallback, directory, SEO pages. See ARCHITECTURE.md.
