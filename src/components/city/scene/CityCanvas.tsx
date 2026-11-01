@@ -13,7 +13,7 @@ import { CameraRig } from "./CameraRig";
 import { FloorStack } from "./FloorStack";
 import { Ground } from "./Ground";
 import { streetLayout } from "./layout";
-import { Beacons, Highlight, LabelProjector, type LabelAnchor, type LabelFocus } from "./Markers";
+import { ActivityBeams, Beacons, Highlight, LabelProjector, type LabelAnchor, type LabelFocus } from "./Markers";
 import { detectQuality, dprFor, TIER_SETTINGS, type QualityTier } from "./quality";
 import { Streets } from "./Streets";
 import { Traffic } from "./Traffic";
@@ -101,6 +101,7 @@ export default function CityCanvas({
 }: CityCanvasProps) {
   const snapshot: CitySnapshot = index.snapshot;
   const layout = useMemo(() => streetLayout(snapshot.grid), [snapshot.grid]);
+  const activeBuildings = useMemo(() => [...index.activeBuildings.keys()].flatMap((id) => index.buildingById.get(id) ?? []), [index]);
   const [tier, setTier] = useState<QualityTier>(() => tierProp ?? detectQuality());
   const settings = TIER_SETTINGS[tier];
   const [dpr, setDpr] = useState(1);
@@ -171,6 +172,7 @@ export default function CityCanvas({
         {interactive && <Streets layout={layout} />}
         <Traffic layout={layout} animate={cityAnimate} density={settings.traffic} />
         {settings.beacons && <Beacons buildings={snapshot.buildings} indicators={index.indicatorByBuilding} visible={visibleIndicators} animate={cityAnimate && tier !== "low"} />}
+        {activeBuildings.length > 0 && <ActivityBeams buildings={activeBuildings} animate={cityAnimate} />}
         {!inside && labels && <LabelProjector anchors={labels.anchors} elements={labels.elements} buildings={snapshot.buildings} focus={labels.focus} />}
         {hovered && <Highlight building={hovered} tone="hover" />}
         {selected && view === "city" && <Highlight building={selected} tone="selected" />}

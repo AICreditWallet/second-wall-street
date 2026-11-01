@@ -15,6 +15,8 @@ export interface PodAgent {
   id: string;
   name: string;
   status: string;
+  /** Latest real task this agent ran (from the run log). */
+  lastTask?: { status: string; at: string };
 }
 
 export interface InteriorProps {
@@ -34,10 +36,15 @@ export interface InteriorProps {
   animate: boolean;
   shadows: boolean;
   showWorkflow?: boolean;
+  /** Agent ids in the order the latest run handed work between them. */
+  flow?: string[];
   seed?: number;
 }
 
 const WALL_H = 3.2;
+
+const timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" });
+const shortTime = (iso: string) => `${timeFmt.format(new Date(iso))} ET`;
 
 /** Disposes a GPU resource when it is replaced or the component unmounts. */
 function useDisposable<T extends { dispose(): void }>(value: T) {
@@ -208,7 +215,8 @@ function Pod({
 }) {
   const core = useRef<THREE.Mesh>(null);
   const [hover, setHover] = useState(false);
-  const name = agent?.name;
+  const done = agent?.lastTask;
+  const name = agent && (done ? `${agent.name} · ${done.status === "succeeded" ? "✓" : "✕"} ${shortTime(done.at)}` : agent.name);
   const label = useDisposable(
     useMemo(
       () => textTexture(name ?? "Open workstation", { height: 72, color: name ? "#ffffff" : "#c9d4ea", background: name ? "rgba(11,20,38,0.88)" : "rgba(40,48,66,0.7)" }).texture,
@@ -263,7 +271,7 @@ function Pod({
   );
 }
 
-/** Animated pulses between agent workstations — only used as a labelled demonstration. */
+/** Animated pulses along the hand-offs of the latest real workflow run. */
 function Workflow({ points, accent }: { points: THREE.Vector3[]; accent: string }) {
   const curves = useMemo(
     () =>
@@ -375,19 +383,18 @@ export default function Interior({
   animate,
   shadows,
   showWorkflow,
+  flow = [],
   seed = 1,
 }: InteriorProps) {
   const layout = getLayout(kind);
   const kit = useInteriorKit(accent);
   const lobby = kind === "lobby";
 
-  const podPoints = useMemo(
-    () =>
-      layout.items
-        .filter((i): i is Extract<typeof i, { kind: "pod" }> => i.kind === "pod" && Boolean(agents[i.slot]))
-        .map((p) => new THREE.Vector3(p.x, 0, p.z)),
-    [layout, agents],
-  );
+  const podPoints = useMemo(() => {
+    const pods = layout.items.filter((i): i is Extract<typeof i, { kind: "pod" }> => i.kind === "pod" && Boolean(agents[i.slot]));
+    const at = new Map(pods.map((p) => [agents[p.slot]!.id, new THREE.Vector3(p.x, 0, p.z)]));
+    return flow.flatMap((id) => at.get(id) ?? []);
+  }, [layout, agents, flow]);
 
   return (
     <group>
@@ -438,7 +445,7 @@ export default function Interior({
       })}
 
       {people > 0 && <People layout={layout} count={people} animate={animate} seed={seed} />}
-      {showWorkflow && podPoints.length >= 2 && <Workflow points={podPoints.slice(0, 4)} accent={accent} />}
+      {showWorkflow && podPoints.length >= 2 && <Workflow points={podPoints} accent={accent} />}
 
       <InteriorCamera width={layout.width} depth={layout.depth} />
     </group>

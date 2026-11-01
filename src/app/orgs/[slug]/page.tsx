@@ -9,6 +9,9 @@ import { ReviewSection } from "@/components/marketplace/ReviewSection";
 
 export const revalidate = 60;
 
+/** Platform organisations whose agents publish research and workflow runs. */
+const RESEARCH_ORGS = new Set(["open15-ai", "research-lab"]);
+
 export async function generateStaticParams() {
   const s = await getCitySnapshot();
   return s.organizations.map((o) => ({ slug: o.slug }));
@@ -70,9 +73,15 @@ export default async function OrgPage({ params }: { params: Promise<{ slug: stri
           ))}
         </ul>
       )}
-      {office && (
-        <div className="mt-6">
-          <ButtonLink href={`/city?b=${office.buildingId}`}>Visit the office in 3D</ButtonLink>
+      {(office || RESEARCH_ORGS.has(org.slug)) && (
+        <div className="mt-6 flex flex-wrap gap-3">
+          {office && <ButtonLink href={`/city?b=${office.buildingId}`}>Visit the office in 3D</ButtonLink>}
+          {RESEARCH_ORGS.has(org.slug) && (
+            <>
+              <ButtonLink href="/research" variant="secondary">Today&apos;s research</ButtonLink>
+              <ButtonLink href="/workflows" variant="secondary">Watch the agents work</ButtonLink>
+            </>
+          )}
         </div>
       )}
       <h2 className="mt-12 text-lg font-semibold">Agents</h2>

@@ -4,6 +4,7 @@ import { generateCity } from "@/lib/city/generator";
 import type { Agent, Building, CitySnapshot, District, InteriorTemplate, Office, OfficeInterior, Organization, Workstation } from "@/lib/city/types";
 import { createSupabasePublicClient } from "@/lib/supabase/server";
 import { SUPABASE_URL } from "@/lib/supabase/env";
+import { getCityActivity } from "@/lib/firm/server";
 
 export function logoUrl(path: string | null | undefined, version?: string) {
   if (!path) return undefined;
@@ -52,8 +53,9 @@ export const ORG_COLUMNS = "id, slug, name, tagline, description, website_url, g
  */
 export const getCitySnapshot = cache(async (): Promise<CitySnapshot> => {
   const demo = generateCity();
+  const activity = await getCityActivity().catch(() => null);
   const db = createSupabasePublicClient();
-  if (!db) return demo;
+  if (!db) return { ...demo, activity };
 
   const [districts, buildings, offices, orgs, agents] = await Promise.all([
     db.from("districts").select("id, slug, name, tagline, center_x, center_z").order("sort_order"),
@@ -97,6 +99,7 @@ export const getCitySnapshot = cache(async (): Promise<CitySnapshot> => {
   return {
     ...demo,
     source: "database",
+    activity,
     interiors,
     workstations,
     ratings,

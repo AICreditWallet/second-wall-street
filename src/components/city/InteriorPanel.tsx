@@ -16,6 +16,8 @@ const STATUS: Record<Agent["status"], { label: string; note: string }> = {
   live: { label: "Live", note: "This agent is available." },
 };
 
+const timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+
 export function LobbyPanel({ index, buildingId, onClose, onEnterOffice }: { index: CityIndex; buildingId: string; onClose: () => void; onEnterOffice: (id: string) => void }) {
   const building = index.buildingById.get(buildingId);
   const offices = index.officesByBuilding.get(buildingId) ?? [];
@@ -61,6 +63,8 @@ export function OfficeInteriorPanel({
   const agents = interior.agents.map((id) => (id ? index.snapshot.agents.find((a) => a.id === id) : undefined));
   const placed = agents.filter((a): a is Agent => Boolean(a));
   const agent = selectedAgentId ? placed.find((a) => a.id === selectedAgentId) : undefined;
+  const tasks = index.snapshot.activity?.tasks ?? {};
+  const run = org ? index.snapshot.activity?.runs[org.slug] : undefined;
 
   if (agent) {
     const status = STATUS[agent.status];
@@ -73,6 +77,18 @@ export function OfficeInteriorPanel({
             <Badge>{agent.category}</Badge>
           </div>
           <p className="text-sm leading-relaxed text-fg-muted">{agent.summary}</p>
+          {tasks[agent.id] && (
+            <section className="rounded-xl border border-cyan/30 bg-cyan/5 p-3">
+              <h3 className="text-xs font-medium uppercase tracking-wider text-fg-subtle">Latest task</h3>
+              <p className="mt-1 text-sm">{tasks[agent.id]!.summary ?? (tasks[agent.id]!.status === "succeeded" ? "Completed" : "Did not complete")}</p>
+              <p className="mt-1 text-xs text-fg-subtle">
+                {tasks[agent.id]!.status === "succeeded" ? "Completed" : tasks[agent.id]!.status} · {timeFmt.format(new Date(tasks[agent.id]!.at))}
+              </p>
+              <Link href={`/workflows/${tasks[agent.id]!.runId}`} className="mt-2 inline-flex items-center gap-1 text-sm text-cyan-soft hover:underline">
+                See the full run <ArrowUpRight className="size-3.5" aria-hidden="true" />
+              </Link>
+            </section>
+          )}
           <p className="flex gap-2 rounded-xl border border-line bg-white/[0.03] px-3 py-2.5 text-xs text-fg-muted">
             <Info className="size-4 shrink-0" aria-hidden="true" /> {status.note}
           </p>
@@ -153,18 +169,25 @@ export function OfficeInteriorPanel({
                       <span className="block text-sm font-medium">{a.name}</span>
                       <span className="block truncate text-xs text-fg-subtle">{a.category}</span>
                     </span>
-                    <span className="text-[11px] text-fg-subtle">{STATUS[a.status].label}</span>
+                    <span className="text-right text-[11px] text-fg-subtle">
+                      {STATUS[a.status].label}
+                      {tasks[a.id] && <span className="block text-cyan-soft">{tasks[a.id]!.status === "succeeded" ? "✓ ran" : "✕ failed"} {timeFmt.format(new Date(tasks[a.id]!.at)).split(", ").pop()}</span>}
+                    </span>
                   </button>
                 </li>
               ))}
             </ul>
-            {placed.length >= 2 && (
-              <label className="mt-3 flex min-h-10 cursor-pointer items-center gap-2.5 text-sm">
-                <input type="checkbox" checked={showWorkflow} onChange={onToggleWorkflow} className="size-4 accent-cyan-400" />
-                <WorkflowIcon className="size-4 text-fg-muted" aria-hidden="true" />
-                Show how these agents could hand work to each other
-                <span className="text-xs text-fg-subtle">(demonstration)</span>
-              </label>
+            {run && placed.length >= 2 && (
+              <>
+                <label className="mt-3 flex min-h-10 cursor-pointer items-center gap-2.5 text-sm">
+                  <input type="checkbox" checked={showWorkflow} onChange={onToggleWorkflow} className="size-4 accent-cyan-400" />
+                  <WorkflowIcon className="size-4 text-fg-muted" aria-hidden="true" />
+                  Show the hand-offs from the latest run
+                </label>
+                <Link href={`/workflows/${run.runId}`} className={buttonClass("secondary", "mt-2 min-h-10 w-full")}>
+                  Watch the latest run step by step
+                </Link>
+              </>
             )}
           </section>
         )}
