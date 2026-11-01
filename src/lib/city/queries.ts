@@ -1,4 +1,4 @@
-import type { Building, BuildingIndicator, CitySnapshot, Office, Organization } from "./types";
+import type { Building, BuildingIndicator, CityActivity, CitySnapshot, Office, Organization } from "./types";
 
 /** Pre-indexed view of a snapshot for O(1) lookups on the client and server. */
 export interface CityIndex {
@@ -7,6 +7,8 @@ export interface CityIndex {
   officesByBuilding: Map<string, Office[]>;
   orgById: Map<string, Organization>;
   indicatorByBuilding: Map<string, BuildingIndicator>;
+  /** Buildings whose platform agents ran in the latest session. */
+  activeBuildings: Map<string, { org: Organization; run: CityActivity["runs"][string] }>;
 }
 
 export function indicatorFor(offices: Office[]): BuildingIndicator {
@@ -28,13 +30,14 @@ export function indexCity(snapshot: CitySnapshot): CityIndex {
   for (const b of snapshot.buildings) {
     indicatorByBuilding.set(b.id, indicatorFor(officesByBuilding.get(b.id) ?? []));
   }
-  return {
-    snapshot,
-    buildingById,
-    officesByBuilding,
-    orgById: new Map(snapshot.organizations.map((o) => [o.id, o])),
-    indicatorByBuilding,
-  };
+  const orgById = new Map(snapshot.organizations.map((o) => [o.id, o]));
+  const activeBuildings: CityIndex["activeBuildings"] = new Map();
+  for (const [slug, run] of Object.entries(snapshot.activity?.runs ?? {})) {
+    const org = snapshot.organizations.find((o) => o.slug === slug);
+    const office = org && snapshot.offices.find((o) => o.organizationId === org.id);
+    if (org && office && !activeBuildings.has(office.buildingId)) activeBuildings.set(office.buildingId, { org, run });
+  }
+  return { snapshot, buildingById, officesByBuilding, orgById, indicatorByBuilding, activeBuildings };
 }
 
 export function organizationForBuilding(index: CityIndex, buildingId: string): Organization | null {

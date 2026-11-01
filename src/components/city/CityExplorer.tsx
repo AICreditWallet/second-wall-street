@@ -13,6 +13,8 @@ import type { CameraCommand } from "./camera-store";
 import { CityMap2D } from "./CityMap2D";
 import { BuildingPanel } from "./BuildingPanel";
 import { LobbyPanel, OfficeInteriorPanel } from "./InteriorPanel";
+import { ActivityCard } from "./ActivityCard";
+import { workflowById } from "@/lib/firm/workflows";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
 import { useMediaQuery, useReducedMotion, useViewportHeight, useWebGLSupport } from "./hooks";
 import { roofTop, type LabelAnchor, type LabelFocus } from "./scene/Markers";
@@ -74,7 +76,8 @@ export function CityExplorer({ snapshot }: { snapshot: CitySnapshot }) {
   const [nav, setNav] = useState<Nav>({ view: "city", buildingId: null, officeId: null });
   const [selectedOfficeId, setSelectedOfficeId] = useState<string | null>(null);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
-  const [showWorkflow, setShowWorkflow] = useState(false);
+  // The latest real run's hand-offs are drawn in the office by default.
+  const [showWorkflow, setShowWorkflow] = useState(true);
   const [sceneReady, setSceneReady] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [mode, setMode] = useState<"3d" | "2d">("3d");
@@ -101,7 +104,7 @@ export function CityExplorer({ snapshot }: { snapshot: CitySnapshot }) {
     labelFocus.current = { hoveredId, selectedId, hidden: inside, isolate: nav.view === "building" };
   }, [hoveredId, selectedId, inside, nav.view]);
   const labels = useMemo(() => {
-    const anchors: (LabelAnchor & { text: string; sub?: string })[] = snapshot.districts.map((d) => ({
+    const anchors: (LabelAnchor & { text: string; sub?: string; active?: boolean })[] = snapshot.districts.map((d) => ({
       id: d.id,
       text: d.name,
       kind: "district" as const,
@@ -110,14 +113,16 @@ export function CityExplorer({ snapshot }: { snapshot: CitySnapshot }) {
     }));
     for (const b of snapshot.buildings) {
       const org = organizationForBuilding(index, b.id);
+      const active = index.activeBuildings.has(b.id);
       anchors.push({
         id: b.id,
         buildingId: b.id,
         text: org?.name ?? b.name,
         sub: org ? b.name : undefined,
+        active,
         kind: "building",
         pinned: Boolean(org),
-        priority: org ? 60 : 10 + b.height / 10,
+        priority: active ? 90 : org ? 60 : 10 + b.height / 10,
         position: [b.position[0], roofTop(b) + 7, b.position[1]],
       });
     }
@@ -144,7 +149,7 @@ export function CityExplorer({ snapshot }: { snapshot: CitySnapshot }) {
         return next;
       });
       setSelectedAgentId(null);
-      setShowWorkflow(false);
+      setShowWorkflow(true);
       if (next.view !== "building") setSelectedOfficeId(null);
       const url = urlFromNav(next);
       if (opts.push) window.history.pushState(null, "", url);
@@ -288,10 +293,14 @@ export function CityExplorer({ snapshot }: { snapshot: CitySnapshot }) {
     }
     if (nav.view === "office" && office && resolved) {
       const org = office.organizationId ? index.orgById.get(office.organizationId) : undefined;
+      const tasks = snapshot.activity?.tasks ?? {};
       const agents = resolved.agents.map((id) => {
         const a = id ? snapshot.agents.find((x) => x.id === id) : undefined;
-        return a ? { id: a.id, name: a.name, status: a.status } : undefined;
+        return a ? { id: a.id, name: a.name, status: a.status, lastTask: tasks[a.id] ? { status: tasks[a.id]!.status, at: tasks[a.id]!.at } : undefined } : undefined;
       });
+      // Hand-off order of this organisation's latest run, if any.
+      const run = org ? snapshot.activity?.runs[org.slug] : undefined;
+      const flow = run ? (workflowById.get(run.workflowId)?.steps.flatMap((st) => (st.agentId ? [st.agentId] : [])) ?? []) : [];
       return {
         kind: resolved.template,
         accent: resolved.accent,
@@ -300,7 +309,8 @@ export function CityExplorer({ snapshot }: { snapshot: CitySnapshot }) {
         agents,
         selectedAgentId,
         onSelectAgent: setSelectedAgentId,
-        showWorkflow,
+        showWorkflow: showWorkflow && flow.length >= 2,
+        flow,
         people: office.status === "available" ? 0 : resolved.template === "research" ? 14 : resolved.template === "startup" ? 8 : 4,
         seed: office.id.length * 31 + building.floors,
       };
@@ -417,7 +427,11 @@ export function CityExplorer({ snapshot }: { snapshot: CitySnapshot }) {
                   : `rounded-full border px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur data-[focus=1]:border-cyan data-[focus=1]:bg-cyan/20 ${l.pinned ? "border-violet/50 bg-ink-900/85" : "border-line bg-ink-900/75"}`
               }`}
             >
+              {l.active && (
+                <span className="mr-1.5 inline-block size-1.5 animate-pulse rounded-full bg-cyan align-middle shadow-[0_0_8px_#38e1ff]" />
+              )}
               {l.text}
+              {l.active && <span className="ml-1.5 text-cyan-soft">· agents ran</span>}
             </span>
           ))}
         </div>
@@ -626,6 +640,13 @@ export function CityExplorer({ snapshot }: { snapshot: CitySnapshot }) {
               <List className="size-4" />
             </Link>
           </div>
+        </div>
+      )}
+
+      {/* Real agent activity (latest session) */}
+      {!inside && !panelOpen && nav.view === "city" && (
+        <div className="absolute right-3 z-10 sm:right-4" style={{ top: "calc(max(0.75rem, env(safe-area-inset-top)) + 3.4rem)" }}>
+          <ActivityCard index={index} defaultOpen={wide} onShow={(id) => select(id)} />
         </div>
       )}
 

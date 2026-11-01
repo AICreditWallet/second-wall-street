@@ -2,6 +2,41 @@
 
 _Last updated: 2026-11-01_
 
+| Phase | Status |
+|---|---|
+| 0–1 Architecture, landing page, 3D city | Live |
+| 2 Accounts and offices | Live |
+| 3D City v2 (white-screen fix, interiors) | Live |
+| 3 AI agent marketplace | Live |
+| 4–5 Open15 research engine + multi-agent firm | Branch `phase-4-5-research` — needs migration + merge |
+| 6 Stripe (test mode first) | Not started |
+
+## Phases 4–5 — Open15 research and the multi-agent firm (branch `phase-4-5-research`)
+
+**Zero running cost.** No paid market data, no AI/LLM APIs, no cron jobs. The agents are deterministic code; the first visit after each session's 9:30–9:45 ET window computes that session's research once and stores it (unique constraints make this safe under concurrent visits).
+
+**Market data.** `src/lib/market/`: a provider interface (`MarketDataProvider`) with one implementation, a deterministic **simulator** of 32 fictional `SIM:` instruments (incl. illiquid, penny and two later-delisted ones). Every page that shows its output says "Simulated data — not real prices". A licensed feed can be plugged in later by adding a provider; nothing else changes. NYSE calendar (holidays incl. Good Friday and Juneteenth, early-close days are treated as full opens, DST via `Intl`). Indicators: SMA, EMA, RSI, MACD, ATR, Bollinger, VWAP, opening range, resampling, candlestick patterns.
+
+**Open15 research (`/research`).** The ten steps from the brief: calendar, universe, liquidity filters, prior-day context (no premarket feed), 9:30–9:45 observation, indicators, notable conditions, transparent weighted ranking, evidence per candidate, timestamped summary. Mini-charts (candles, VWAP, opening range), methodology, limitations, excluded instruments and session history.
+
+**Back-tests (`/research/backtests`).** Five strategies (gap-and-go, opening-range breakout, VWAP trend, relative-volume momentum, gap fade). 120 sessions, walk-forward parameter choice on past data only and scoring on unseen blocks (out-of-sample), 5 bps slippage + 1 bp commission per side, opening-range stops, delisted instruments included while they traded, equal-weight benchmark. Results are labelled hypothetical and are mixed, as expected.
+
+**Multi-agent firm (`/workflows`).** A workflow engine (`src/lib/firm/engine.ts`) with fixed step lists (max 12), per-agent permission boundaries (each agent receives only the workspace fields it declares), handoff messages, budgets in units, timeouts, up to 2 retries, human approval gates (claimed atomically so a double click can't run steps twice), cancellation and a full event log. Agents: Opening Session Scanner, Opening Range Analyst, Research Analyst, Technical Analyst, Market Intelligence (breadth only, says no news feed is connected), Risk Analyst (hypothetical basket: volatility, VaR, concentration), Portfolio Research (simulated allocations), Report Agent (sourced report + disclaimer).
+- Platform runs: each workflow runs once per session in public. The research-firm run's approval gate is passed by a stated platform policy, recorded in the run.
+- Signed-in people can start private runs (5 per 24 h), approve or cancel them. Only the starter sees or controls a private run (RLS + server checks).
+
+**Visible on the map.** Real run records drive it, never decoration:
+- Light beam and pulsing ring over the Open15 AI and Research Lab buildings, with "· agents ran" on their labels.
+- An "Agent activity" card (collapsed pill on phones) listing the latest runs, with "Show office" and "Watch the run".
+- The building panel links to the run and today's research.
+- Inside the office, each workstation shows its last task and time, hand-off arcs follow the latest run's real order, and the agent card shows the latest task with a link to the run.
+
+**Database.** `supabase/migrations/20261104000100_research_and_workflows.sql`: research_runs, research_signals, backtest_runs, workflow_runs, agent_tasks, agent_messages, workflow_events, an `agent_usage` view. Visitors read public rows; private runs are owner-only; only the server (service role) writes. Also marks the 8 platform agents Live with updated summaries, and updates the Research Lab description.
+
+**Tests:** 149 unit/DB tests (incl. a look-ahead test that scrambles post-9:45 data and checks results don't change, and RLS attacks on the new tables), 56 E2E tests on desktop + mobile, typecheck, lint, build.
+
+**Needs owner action:** run the migration in Supabase, then merge the PR.
+
 ## Live infrastructure (set up 2026-11-01)
 | Service | Where | Notes |
 |---|---|---|
@@ -12,7 +47,7 @@ _Last updated: 2026-11-01_
 
 Owner to-dos: Vercel Pro before commercial launch (Hobby is non-commercial); custom SMTP for branded auth emails; GitHub Pro if branch protection is wanted.
 
-## 3D City v2 — on branch `city-v2` (not deployed to production)
+## 3D City v2 — live
 
 **White-screen bug — root cause found and fixed.**
 - Reproduced: forcing a WebGL context loss produces exactly the reported screen (white canvas, labels and panel still visible).
@@ -37,7 +72,7 @@ Owner to-dos: Vercel Pro before commercial launch (Hobby is non-commercial); cus
 - Three reusable office templates (Developer Studio, AI Startup, Research Firm) with desks, monitors, glass meeting rooms, kitchen, sofas, plants, skyline windows and wall displays.
 - Animated people (walk / sit / type / talk) on A* paths that avoid furniture and each other.
 - Agent workstations show real agent records; clicking one opens an agent card with honest status, linking to the new `/agents/[slug]` pages.
-- The optional "how agents hand work over" animation is labelled as a demonstration.
+- Hand-off arcs between workstations follow the latest real workflow run (Phase 5).
 - Breadcrumbs and Back everywhere; the URL keeps the place (`?b=…&view=lobby`, `&office=…`) so links, refresh and the browser back button work.
 - One WebGL canvas for everything, with no reloads; interiors are code-split.
 
@@ -45,12 +80,10 @@ Owner to-dos: Vercel Pro before commercial launch (Hobby is non-commercial); cus
 
 **Tests:** 72 unit/DB tests (28 attack the SQL/RLS), 36 E2E tests, typecheck, lint and build all pass.
 
-**Needs owner approval:** merge `city-v2` to `main` (deploys to production) and apply the new migration in Supabase.
-
 ## Phase 0 + 1 — done (2026-10-31)
 Architecture, design system, landing page, interactive 3D city, office panels, 2D fallback, directory, SEO pages. See ARCHITECTURE.md.
 
-## Phase 2 — Accounts and offices — built, waiting for Supabase connection
+## Phase 2 — Accounts and offices — live
 
 Implemented:
 - **Database** (`supabase/migrations/`): profiles, roles, districts, buildings, offices, organisations, members, office claims, plans (prices empty until approved), agents, moderation reports, audit log, reserved slugs. Seed generated from the city layout (`npm run db:seed:generate`).
@@ -79,4 +112,4 @@ Not verified yet (needs your Supabase project): real GitHub/email sign-in, email
 - Playwright uses your installed Google Chrome (Playwright's own Chromium doesn't support macOS 13).
 
 ## Next recommended action
-Connect staging Supabase and run `E2E_SUPABASE=1 npm run test:e2e`; then Phase 3 — agent marketplace (agent registration, HTTPS connections with SSRF-guarded health checks, ratings and reviews).
+Apply the Phase 4–5 migration and merge. Then: a licensed market-data provider if real prices are wanted (paid; owner decision), an admin/moderation dashboard, and Phase 6 — Stripe in test mode.
