@@ -1,0 +1,15 @@
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+# Secrets: never commit real environment files
+.env
+.env.*
+!.env.example
+.vercel
+test-results/
+playwright-report/
+.claude/

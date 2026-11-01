@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/* Design tokens — Second Wall Street */
+@theme {
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-ink-950: #04070f;
+  --color-ink-900: #070c1a;
+  --color-ink-850: #0a1124;
+  --color-ink-800: #0e1730;
+  --color-ink-700: #16213f;
+  --color-ink-600: #24304f;
+  --color-line: rgb(148 170 220 / 0.14);
+  --color-line-strong: rgb(148 170 220 / 0.26);
+
+  --color-fg: #eef2fb;
+  --color-fg-muted: #a3adc4;
+  --color-fg-subtle: #6f7a94;
+
+  --color-cyan: #38e1ff;
+  --color-cyan-soft: #8ff0ff;
+  --color-gold: #e2b86b;
+  --color-violet: #a78bfa;
+  --color-danger: #ff7a85;
+
+  --radius-card: 1.25rem;
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-ink-950);
+  color: var(--color-fg);
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--color-ink-950);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgb(56 225 255 / 0.3);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@utility glass {
+  background: rgb(9 15 32 / 0.86);
+  border: 1px solid var(--color-line);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@utility safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-rise {
+  animation: rise-in 0.7s var(--ease-out-soft) both;
+}
