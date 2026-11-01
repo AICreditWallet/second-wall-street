@@ -32,7 +32,11 @@ export default async function AgentsPage() {
                 <Bot className="size-5 text-cyan" aria-hidden="true" />
                 <Badge>{a.status === "in-development" ? "In development" : a.status === "preview" ? "Preview" : "Live"}</Badge>
               </div>
-              <h2 className="mt-4 font-medium">{a.name}</h2>
+              <h2 className="mt-4 font-medium">
+                <Link href={`/agents/${a.slug}`} className="hover:underline">
+                  {a.name}
+                </Link>
+              </h2>
               {org && (
                 <Link href={`/orgs/${org.slug}`} className="text-xs text-fg-subtle hover:text-fg">
                   {org.name}

@@ -7,7 +7,7 @@ const config = [
   {
     // three.js scene code mutates cameras, matrices and instance buffers inside
     // useFrame by design; the React Compiler purity rules don't model that.
-    files: ["src/components/city/scene/**/*.tsx"],
+    files: ["src/components/city/scene/**/*.tsx", "src/components/city/interior/**/*.tsx"],
     rules: {
       "react-hooks/immutability": "off",
       "react-hooks/refs": "off",

@@ -12,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/developers",
     ...Object.keys(LEGAL_DOCS).map((d) => `/legal/${d}`),
     ...s.organizations.map((o) => `/orgs/${o.slug}`),
+    ...s.agents.map((a) => `/agents/${a.slug}`),
     ...s.buildings.map((b) => `/buildings/${b.id}`),
   ];
   return paths.map((p) => ({ url: `${SITE.url}${p}` }));

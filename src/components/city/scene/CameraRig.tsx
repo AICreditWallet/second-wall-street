@@ -9,6 +9,9 @@ import type { Building } from "@/lib/city/types";
 import { cameraStore, type CameraCommand } from "../camera-store";
 import { roofTop } from "./Markers";
 
+/** Last city camera, kept across interior visits (module scope survives remounts). */
+let savedCityView: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
+
 export const DEFAULT_VIEW = { distance: 340, polar: 0.92, azimuth: Math.PI / 4 };
 const MIN_DISTANCE = 22;
 const MAX_DISTANCE = 620;
@@ -46,11 +49,23 @@ export function CameraRig({ buildings, bounds, interactive, animate, commands }:
   const byId = useMemo(() => new Map(buildings.map((b) => [b.id, b])), [buildings]);
   const margin = 24;
 
-  // Initial placement.
+  // Initial placement — or restore the view the user left when entering a building.
   useEffect(() => {
-    camera.position.copy(fromSpherical(new THREE.Vector3(), fitDistance(camera), DEFAULT_VIEW.polar, DEFAULT_VIEW.azimuth));
-    camera.lookAt(0, 0, 0);
-  }, [camera]);
+    const saved = savedCityView;
+    const c = controls.current;
+    if (saved && interactive) {
+      camera.position.copy(saved.position);
+      controls.current?.target.copy(saved.target);
+    } else {
+      camera.position.copy(fromSpherical(new THREE.Vector3(), fitDistance(camera), DEFAULT_VIEW.polar, DEFAULT_VIEW.azimuth));
+      controls.current?.target.set(0, 0, 0);
+    }
+    camera.lookAt(controls.current?.target ?? new THREE.Vector3());
+    controls.current?.update();
+    return () => {
+      if (interactive && c) savedCityView = { position: camera.position.clone(), target: c.target.clone() };
+    };
+  }, [camera, interactive]);
 
   useEffect(() => {
     if (!commands) return;
@@ -59,6 +74,8 @@ export function CameraRig({ buildings, bounds, interactive, animate, commands }:
       if (!c) return;
       const az = azimuth ?? c.getAzimuthalAngle();
       const next = { target, position: fromSpherical(target, THREE.MathUtils.clamp(distance, MIN_DISTANCE, MAX_DISTANCE), polar, az) };
+      // Never hand the camera an invalid coordinate.
+      if (![next.target.x, next.target.y, next.target.z, next.position.x, next.position.y, next.position.z].every(Number.isFinite)) return;
       if (!animate) {
         c.target.copy(next.target);
         camera.position.copy(next.position);
@@ -78,6 +95,11 @@ export function CameraRig({ buildings, bounds, interactive, animate, commands }:
         case "focus-building": {
           const b = byId.get(cmd.id);
           if (b) fly(new THREE.Vector3(b.position[0], Math.min(b.height * 0.45, 30), b.position[1]), b.height * 2.2 + 80, 0.95);
+          break;
+        }
+        case "building-view": {
+          const b = byId.get(cmd.id);
+          if (b) fly(new THREE.Vector3(b.position[0], Math.min(b.height * 0.5, 40), b.position[1]), b.height * 2.3 + 90, 1.02);
           break;
         }
         case "focus-point":

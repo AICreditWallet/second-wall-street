@@ -12,6 +12,41 @@ _Last updated: 2026-11-01_
 
 Owner to-dos: Vercel Pro before commercial launch (Hobby is non-commercial); custom SMTP for branded auth emails; GitHub Pro if branch protection is wanted.
 
+## 3D City v2 — on branch `city-v2` (not deployed to production)
+
+**White-screen bug — root cause found and fixed.**
+- Reproduced: forcing a WebGL context loss produces exactly the reported screen (white canvas, labels and panel still visible).
+- Cause: the GPU was overloaded and the app had no context-loss handling. The main cost was ~520 overlapping additive light-pool planes, rendered at up to 2× retina resolution with MSAA, worst when the camera flew close to a building. After repeated GPU resets Chrome disabled WebGL for the whole browser; the owner's Chrome was in that state on 2026-11-01. Restarting Chrome restores it.
+- Fixes:
+  - Light pools baked into one texture (one draw, no overdraw).
+  - Resolution capped by a pixel budget, with quality tiers.
+  - GPU resources disposed on unmount.
+  - Context-loss handler covers the canvas with a "Restart 3D / Use 2D map" screen, never white; after repeated losses it recommends the 2D map.
+  - Scene error boundary; invalid camera coordinates rejected.
+  - A notice when WebGL is unavailable.
+- Regression tests (Playwright, desktop + mobile): repeated select/close/switch with a pixel-brightness check, deep link plus refresh, simulated GPU context loss and recovery.
+
+**City clarity.**
+- Street names painted on roads that fade in when zoomed in and flip to stay readable; district names give way when zoomed in.
+- Buildings labelled by organisation name, with occlusion and overlap handling.
+- Rich hover tooltip (district, floors, availability, category); brighter roads.
+
+**Building → lobby → office → agent.**
+- Floors view: glass floor bands per office, coloured by status and clickable.
+- 3D lobby: reception, elevators, floor directory screen, visitors.
+- Three reusable office templates (Developer Studio, AI Startup, Research Firm) with desks, monitors, glass meeting rooms, kitchen, sofas, plants, skyline windows and wall displays.
+- Animated people (walk / sit / type / talk) on A* paths that avoid furniture and each other.
+- Agent workstations show real agent records; clicking one opens an agent card with honest status, linking to the new `/agents/[slug]` pages.
+- The optional "how agents hand work over" animation is labelled as a demonstration.
+- Breadcrumbs and Back everywhere; the URL keeps the place (`?b=…&view=lobby`, `&office=…`) so links, refresh and the browser back button work.
+- One WebGL canvas for everything, with no reloads; interiors are code-split.
+
+**Database (written and tested, NOT applied to production).** `supabase/migrations/20261102000100_office_interiors.sql` adds `office_interiors` (layout template and accent) and `agent_workstations`, both with RLS. The app works without it, deriving defaults.
+
+**Tests:** 72 unit/DB tests (28 attack the SQL/RLS), 36 E2E tests, typecheck, lint and build all pass.
+
+**Needs owner approval:** merge `city-v2` to `main` (deploys to production) and apply the new migration in Supabase.
+
 ## Phase 0 + 1 — done (2026-10-31)
 Architecture, design system, landing page, interactive 3D city, office panels, 2D fallback, directory, SEO pages. See ARCHITECTURE.md.
 
