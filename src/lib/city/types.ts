@@ -72,6 +72,22 @@ export interface Organization {
   logoUrl?: string;
 }
 
+export type InteriorTemplate = "studio" | "startup" | "research";
+
+/** Per-office interior configuration (table: office_interiors). */
+export interface OfficeInterior {
+  officeId: string;
+  template: InteriorTemplate;
+  accent: string;
+}
+
+/** An agent placed at a workstation slot inside an office (table: agent_workstations). */
+export interface Workstation {
+  officeId: string;
+  slot: number;
+  agentId: string;
+}
+
 export interface CitySnapshot {
   /** "demo" = deterministic development dataset, not live records. */
   source: "demo" | "database";
@@ -84,4 +100,7 @@ export interface CitySnapshot {
   parks: { id: string; name: string; position: [number, number]; size: [number, number] }[];
   water: { position: [number, number]; size: [number, number] };
   grid: { cols: number; rows: number; block: number; street: number; originX: number; originZ: number };
+  /** Optional overrides from the database; defaults are derived when absent. */
+  interiors?: OfficeInterior[];
+  workstations?: Workstation[];
 }

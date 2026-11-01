@@ -96,3 +96,16 @@ body {
 .animate-rise {
   animation: rise-in 0.7s var(--ease-out-soft) both;
 }
+
+@keyframes scene-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-scene-fade {
+  animation: scene-fade 0.6s var(--ease-out-soft) forwards;
+}

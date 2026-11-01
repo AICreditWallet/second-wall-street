@@ -12,6 +12,8 @@ interface Props {
   interactive: boolean;
   onHover?: (id: string | null) => void;
   onSelect?: (id: string) => void;
+  /** Double-click: open the building view. */
+  onEnter?: (id: string) => void;
 }
 
 const EMISSIVE_INTENSITY: Record<WindowStyle, number> = {
@@ -20,7 +22,7 @@ const EMISSIVE_INTENSITY: Record<WindowStyle, number> = {
   "warm-grid": 1.0,
 };
 
-export function Buildings({ buildings, interactive, onHover, onSelect }: Props) {
+export function Buildings({ buildings, interactive, onHover, onSelect, onEnter }: Props) {
   const geo = useMemo(() => buildCityGeometry(buildings), [buildings]);
 
   const facadeMaterials = useMemo(() => {
@@ -74,6 +76,11 @@ export function Buildings({ buildings, interactive, onHover, onSelect }: Props) 
         e.stopPropagation();
         const id = idFor(e);
         if (id) onSelect?.(id);
+      },
+      onDoubleClick: (e: ThreeEvent<MouseEvent>) => {
+        e.stopPropagation();
+        const id = idFor(e);
+        if (id) onEnter?.(id);
       },
     };
   };

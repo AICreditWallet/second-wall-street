@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { generateCity } from "@/lib/city/generator";
-import type { Agent, Building, CitySnapshot, District, Office, Organization } from "@/lib/city/types";
+import type { Agent, Building, CitySnapshot, District, InteriorTemplate, Office, OfficeInterior, Organization, Workstation } from "@/lib/city/types";
 import { createSupabasePublicClient } from "@/lib/supabase/server";
 import { SUPABASE_URL } from "@/lib/supabase/env";
 
@@ -65,12 +65,27 @@ export const getCitySnapshot = cache(async (): Promise<CitySnapshot> => {
   const failed = [districts, buildings, offices, orgs, agents].find((r) => r.error);
   if (failed?.error) throw new Error(`City data unavailable: ${failed.error.message}`);
 
+  // Interior configuration is optional: if the 3D City v2 migration has not
+  // been applied yet, these queries fail and defaults are derived instead.
+  const [interiorRows, workstationRows] = await Promise.all([
+    db.from("office_interiors").select("office_id, template, accent_color"),
+    db.from("agent_workstations").select("office_id, slot, agent_id"),
+  ]);
+  const interiors: OfficeInterior[] = interiorRows.error
+    ? []
+    : interiorRows.data.map((r) => ({ officeId: r.office_id, template: r.template as InteriorTemplate, accent: r.accent_color }));
+  const workstations: Workstation[] = workstationRows.error
+    ? []
+    : workstationRows.data.map((r) => ({ officeId: r.office_id, slot: r.slot, agentId: r.agent_id }));
+
   // Keep the generator's building order so geometry/IDs line up with the layout.
   const order = new Map(demo.buildings.map((b, i) => [b.id, i]));
 
   return {
     ...demo,
     source: "database",
+    interiors,
+    workstations,
     districts: districts.data!.map(
       (d): District => ({ id: d.id, slug: d.slug, name: d.name, tagline: d.tagline, center: [d.center_x, d.center_z] }),
     ),
