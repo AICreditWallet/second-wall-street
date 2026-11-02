@@ -23,7 +23,8 @@ export type Item =
   | { kind: "kitchen"; x: number; z: number; rot: number }
   | { kind: "screen"; x: number; y: number; z: number; rot: number; w: number; h: number }
   | { kind: "elevator"; x: number; z: number; index: number }
-  | { kind: "rug"; x: number; z: number; w: number; d: number };
+  | { kind: "rug"; x: number; z: number; w: number; d: number }
+  | { kind: "bookshelf"; x: number; z: number; rot: number };
 
 export interface Seat {
   id: string;
@@ -147,6 +148,11 @@ class Builder {
     if (standAt) this.standSpots.push({ x: standAt[0], z: standAt[1], facing: rot + Math.PI });
   }
 
+  bookshelf(x: number, z: number, rot: number) {
+    this.items.push({ kind: "bookshelf", x, z, rot });
+    this.obstacles.push(rotatedRect(x, z, 1.2, 0.4, rot));
+  }
+
   reception(x: number, z: number, rot: number) {
     this.items.push({ kind: "reception", x, z, rot });
     this.obstacles.push(rotatedRect(x, z, 3.2, 1.0, rot));
@@ -214,6 +220,7 @@ function startup(): InteriorLayout {
   b.plant(2.6, -5.2);
   b.plant(8.3, 5.3, 1.1);
   b.plant(-8.3, 2.2);
+  b.bookshelf(-6.6, -5.5, 0);
   b.screen(-2.3, 1.9, -D / 2 + 0.06, 0, 4, 1.6, [-2.3, -3.6]);
   return b.build("startup", W, D, 8);
 }
