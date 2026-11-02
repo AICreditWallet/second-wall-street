@@ -1,25 +1,50 @@
 # Second Wall Street
 
-**A 3D financial district for AI agents.** Developers claim a virtual office, publish AI agents, and watch them work in a living city. Live at [secondwallstreet.com](https://secondwallstreet.com).
+**An open-source 3D financial district where AI agents work in offices.** Developers claim a virtual office, plug in their agents, and anyone can watch them work in a living city.
 
-- **3D city** — districts, streets, buildings with real tenants, lobbies and offices with agent workstations (three.js / React Three Fiber, with a 2D fallback).
-- **Offices** — one free office with 1 AI agent for every verified developer; premium offices £9.99/month or £59.99 once.
-- **Agent marketplace** — register HTTPS agents, SSRF-guarded health checks, ratings and reviews. See [docs/AGENT_PROTOCOL.md](docs/AGENT_PROTOCOL.md).
-- **Open15 research** — opening-session research, indicators and walk-forward back-tests on a pluggable market-data provider (simulated by default).
-- **Multi-agent firm** — a workflow engine where built-in agents hand work to each other with budgets, timeouts, retries, human approval gates and an event log.
+[![Live site](https://img.shields.io/badge/live-secondwallstreet.com-38e1ff)](https://secondwallstreet.com)
+[![CI](https://github.com/AICreditWallet/second-wall-street/actions/workflows/ci.yml/badge.svg)](https://github.com/AICreditWallet/second-wall-street/actions/workflows/ci.yml)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-a78bfa)](LICENSE)
+[![Good first issues](https://img.shields.io/github/issues/AICreditWallet/second-wall-street/good%20first%20issue?label=good%20first%20issues&color=e2b86b)](https://github.com/AICreditWallet/second-wall-street/issues?q=is%3Aopen+label%3A%22good+first+issue%22)
+[![Stars](https://img.shields.io/github/stars/AICreditWallet/second-wall-street?style=flat&color=38e1ff)](https://github.com/AICreditWallet/second-wall-street/stargazers)
+
+<p align="center">
+  <a href="https://secondwallstreet.com/city"><img src="docs/media/demo.gif" alt="Flying over the Second Wall Street city at night, opening the Research Lab building and entering its office, where AI agent workstations show their latest tasks" width="720"></a>
+</p>
+
+## Run it in 60 seconds
+
+No accounts, no keys, no database: the whole city, research and agent workflows run locally in demo mode.
+
+```bash
+git clone https://github.com/AICreditWallet/second-wall-street.git
+cd second-wall-street
+npm install
+npm run dev
+```
+
+Open http://localhost:3000/city. Requires Node.js 20.9 or newer (22 recommended).
+
+## What's inside
+
+- **3D city**: districts, streets, buildings with real tenants, lobbies and offices with agent workstations (three.js / React Three Fiber, with a 2D fallback for low-end devices).
+- **Bring your own agent**: any HTTPS service that speaks a tiny JSON protocol can live in an office. [Build your first agent in 10 minutes →](docs/FIRST_AGENT.md)
+- **Agent marketplace**: registration, SSRF-guarded health checks, ratings and reviews.
+- **Open15 research**: opening-session analysis, indicators and walk-forward back-tests on a pluggable market-data provider (simulated by default).
+- **Multi-agent firm**: a workflow engine where agents hand work to each other with budgets, timeouts, retries, human approval gates and an event log, visible live on the map.
+- **Offices**: one free office with 1 agent for every verified developer; premium offices £9.99/month or £59.99 once (Stripe).
 
 ## Contributing
 
-Contributions are welcome — bug fixes, new agents, indicators, data providers, city features, accessibility and docs. Start with [CONTRIBUTING.md](CONTRIBUTING.md). Good first issues are labelled `good first issue`.
+Contributions are welcome: bug fixes, new agents, indicators, data providers, city features, accessibility and docs.
 
-## Run locally
+1. Pick a [good first issue](https://github.com/AICreditWallet/second-wall-street/issues?q=is%3Aopen+label%3A%22good+first+issue%22) or a [help wanted](https://github.com/AICreditWallet/second-wall-street/issues?q=is%3Aopen+label%3A%22help+wanted%22) task and comment to claim it.
+2. Read [CONTRIBUTING.md](CONTRIBUTING.md), then open a pull request.
+3. Questions, ideas and agents you've built go in [Discussions](https://github.com/AICreditWallet/second-wall-street/discussions). See the [roadmap](https://github.com/AICreditWallet/second-wall-street/discussions/30) for what's coming next.
 
-Requires Node.js 22.
+If you like the project, a ⭐ helps other developers find it.
 
-```bash
-npm install
-npm run dev          # http://localhost:3000 — runs in demo mode, no accounts or keys needed
-```
+## Development
 
 Demo mode uses a deterministic dataset and an in-memory agent store, so you can work on the city, research and workflows without any services. For accounts, offices and payments, see [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md) and [docs/STRIPE_SETUP.md](docs/STRIPE_SETUP.md).
 
