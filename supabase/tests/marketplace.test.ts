@@ -29,6 +29,9 @@ beforeAll(async () => {
   const office = (await db.query<{ id: string }>("select id from public.offices where status = 'available' and tier = 'standard' order by id limit 1")).rows[0]!.id;
   await as(db, owner, (tx) => tx.query("select public.claim_office($1, 'Builder Labs', 'builder-labs')", [office]));
   org = (await db.query<{ id: string }>("select id from public.organizations where slug = 'builder-labs'")).rows[0]!.id;
+  // These tests need several agents in one organisation; the free plan's real
+  // limit (1) is tested in billing.test.ts.
+  await db.query("update public.office_plans set max_agents = 3 where tier = 'standard'");
 }, 60_000);
 
 describe("registering agents", () => {

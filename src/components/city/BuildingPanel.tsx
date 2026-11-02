@@ -97,7 +97,7 @@ export function FloorRow({
       )}
       {premium && (
         <Link href={`/claim/${encodeURIComponent(office.id)}`} className={buttonClass("secondary", "min-h-9 px-3 text-xs")}>
-          Waitlist
+          Rent · £9.99/mo
         </Link>
       )}
     </li>
@@ -217,7 +217,7 @@ export function BuildingPanel({
           <p className="text-sm leading-relaxed text-fg-muted">
             {indicator === "free"
               ? "This building has free offices. Claim one to give your organisation a home in the district and list your AI agents here."
-              : "A high-visibility location reserved for premium offices. Pricing will be announced before premium offices open."}
+              : "A high-visibility location for premium offices: £9.99/month or £59.99 once, with room for up to 10 AI agents."}
           </p>
         )}
 

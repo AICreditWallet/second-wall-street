@@ -24,7 +24,7 @@ const csp = [
   "frame-ancestors 'none'",
   "base-uri 'self'",
   // OAuth sign-in redirects through Supabase to GitHub after a form post.
-  `form-action 'self' https://github.com ${supabaseOrigin}`.trim(),
+  `form-action 'self' https://github.com https://checkout.stripe.com https://billing.stripe.com ${supabaseOrigin}`.trim(),
   "object-src 'none'",
   ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
