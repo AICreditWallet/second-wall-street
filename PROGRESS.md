@@ -9,11 +9,11 @@ _Last updated: 2026-11-02_
 | 3D City v2 (white-screen fix, interiors) | Live |
 | 3 AI agent marketplace | Live |
 | 4–5 Open15 research engine + multi-agent firm | Live |
-| 6 Paid offices with Stripe (test mode) | Branch `phase-6-billing` — needs migration, Stripe keys, merge |
-| 7 Open-source launch (AGPL-3.0 + CLA) | Branch `phase-6-billing` — repo goes public after merge |
-| 8 Hardening: admin & moderation dashboard | Branch `phase-6-billing` |
+| 6 Paid offices with Stripe | Live in Stripe test mode — first test purchase pending |
+| 7 Open-source launch (AGPL-3.0 + CLA) | Live — repository public since 2026-11-02 |
+| 8 Hardening: admin & moderation dashboard | Live |
 
-## Phases 6–8 — paid offices, open source, admin (branch `phase-6-billing`)
+## Phases 6–8 — paid offices, open source, admin (live)
 
 **Pricing.** Free office with 1 agent for every verified developer. Premium and landmark offices: £9.99/month or £59.99 one-time (10 / 25 agents). Stripe test mode until the owner switches to live keys and upgrades Vercel to Pro (Hobby is non-commercial).
 
@@ -141,4 +141,6 @@ Not verified yet (needs your Supabase project): real GitHub/email sign-in, email
 - Playwright uses your installed Google Chrome (Playwright's own Chromium doesn't support macOS 13).
 
 ## Next recommended action
-Apply the billing migration, add the two Stripe secrets in Vercel and create the webhook (docs/STRIPE_SETUP.md), merge, test a purchase with card 4242…, then make the repository public. Before taking real money: Vercel Pro, Stripe live keys, legal review of the terms, refund policy and CLA.
+Make one test purchase on secondwallstreet.com with card 4242 4242 4242 4242 and cancel it from Manage billing. Grant yourself the admin role to use /admin. Before taking real money: Vercel Pro, Stripe live keys, legal review of the terms, refund policy and CLA.
+
+**Repository hardening (done 2026-11-02):** public; `main` requires a PR with passing CI, no force pushes or deletion; private vulnerability reporting, secret scanning with push protection, Dependabot alerts; workflow tokens read-only by default. Commit author emails rewritten to the GitHub noreply address before publishing.
