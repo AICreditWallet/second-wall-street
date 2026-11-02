@@ -55,6 +55,8 @@ create function vault.update_secret(secret_id uuid, new_secret text) returns voi
 $$;
 revoke all on schema vault from anon, authenticated;
 
--- Supabase grants table privileges to API roles by default; RLS is what restricts them.
-alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+-- Like current Supabase projects: new tables are not granted to the service role
+-- automatically, so every table the server uses needs an explicit grant (the
+-- production admin page once failed because of this). Functions stay executable.
+alter default privileges in schema public grant all on tables to anon, authenticated;
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
