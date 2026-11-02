@@ -61,7 +61,7 @@ export default async function BuildingPage({ params }: { params: Promise<{ id: s
             </span>
             {o.status === "available" && (
               <Link href={`/claim/${o.id}`} className="text-sm text-cyan-soft hover:underline">
-                {o.tier === "standard" ? "Claim free" : "Join waitlist"}
+                {o.tier === "standard" ? "Claim free" : "Rent · £9.99/mo or £59.99 once"}
               </Link>
             )}
           </li>

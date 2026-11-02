@@ -11,10 +11,24 @@ import { PageShell } from "@/components/site/page-shell";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ReleaseOfficeForm } from "./forms";
+import { openBillingPortal } from "../billing/actions";
+import { formatMoney } from "@/lib/billing/plans";
+import { SubmitButton } from "@/components/ui/form";
+
+const PURCHASE_STATUS: Record<string, string> = {
+  pending: "Waiting for payment",
+  active: "Active",
+  past_due: "Payment failed — update your card",
+  canceled: "Ended",
+  expired: "Checkout not completed",
+  refunded: "Refunded",
+  conflict: "Refund in progress",
+};
+const day = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/London" });
 
 export const metadata: Metadata = { title: "Dashboard", robots: { index: false } };
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ claimed?: string; released?: string }> }) {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ claimed?: string; released?: string; billing?: string }> }) {
   const sp = await searchParams;
   const user = await requireUser("/dashboard");
   const supabase = await createSupabaseServerClient();
@@ -24,6 +38,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const profileDone = Boolean(primary && primary.org.description && primary.org.logoUrl);
   const agents = supabase ? await getMyAgents(supabase, mine.map((m) => m.org.id)) : [];
   const canAddAgents = mine.some((m) => (m.role === "owner" || m.role === "admin") && m.offices.length > 0);
+  const { data: purchaseRows } = supabase
+    ? await supabase.from("office_purchases").select("id, office_id, kind, status, amount_minor, currency, current_period_end, cancel_at_period_end, created_at").neq("status", "expired").order("created_at", { ascending: false }).limit(20)
+    : { data: null };
+  const purchases = purchaseRows ?? [];
+  const paidOffices = new Set(purchases.filter((p) => p.status === "active" || p.status === "past_due").map((p) => p.office_id as string));
 
   const steps = [
     { done: user.emailVerified, label: "Verify your email" },
@@ -84,7 +103,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     <ButtonLink href={`/orgs/${o.org.slug}`} variant="secondary" className="min-h-10">
                       Public page
                     </ButtonLink>
-                    {o.role !== "member" && <ReleaseOfficeForm officeId={o.id} />}
+                    {o.role !== "member" && !paidOffices.has(o.id) && <ReleaseOfficeForm officeId={o.id} />}
                   </div>
                 </li>
               ))}
@@ -125,6 +144,41 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               </ul>
             )}
           </section>
+
+          {purchases.length > 0 && (
+            <section aria-labelledby="billing-h" className="space-y-3 pt-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 id="billing-h" className="text-lg font-semibold">
+                  Billing
+                </h2>
+                <form action={openBillingPortal}>
+                  <SubmitButton variant="secondary" className="min-h-10" pending="Opening…">
+                    Manage billing
+                  </SubmitButton>
+                </form>
+              </div>
+              {sp.billing === "unavailable" && <p className="text-sm text-danger">Billing management is unavailable right now. Please try again shortly.</p>}
+              <ul className="space-y-2">
+                {purchases.map((p) => (
+                  <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-line bg-ink-900 p-4 text-sm">
+                    <span>
+                      <span className="font-medium">
+                        {p.kind === "monthly" ? "Premium office, monthly" : "Premium office, one-time"} · {formatMoney(p.amount_minor, p.currency)}
+                        {p.kind === "monthly" ? "/month" : ""}
+                      </span>
+                      <span className="block text-xs text-fg-muted">
+                        Office {p.office_id}
+                        {p.kind === "monthly" && p.current_period_end && (p.status === "active" || p.status === "past_due")
+                          ? ` · ${p.cancel_at_period_end ? "ends" : "renews"} ${day.format(new Date(p.current_period_end))}`
+                          : ""}
+                      </span>
+                    </span>
+                    <Badge tone={p.status === "active" ? "cyan" : p.status === "past_due" ? "gold" : "muted"}>{PURCHASE_STATUS[p.status] ?? p.status}</Badge>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {primary && (
             <div className="rounded-3xl border border-line bg-ink-900 p-5">
