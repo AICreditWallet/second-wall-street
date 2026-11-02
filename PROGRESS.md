@@ -1,6 +1,6 @@
 # Progress
 
-_Last updated: 2026-11-01_
+_Last updated: 2026-11-02_
 
 | Phase | Status |
 |---|---|
@@ -8,8 +8,37 @@ _Last updated: 2026-11-01_
 | 2 Accounts and offices | Live |
 | 3D City v2 (white-screen fix, interiors) | Live |
 | 3 AI agent marketplace | Live |
-| 4–5 Open15 research engine + multi-agent firm | Branch `phase-4-5-research` — needs migration + merge |
-| 6 Stripe (test mode first) | Not started |
+| 4–5 Open15 research engine + multi-agent firm | Live |
+| 6 Paid offices with Stripe (test mode) | Branch `phase-6-billing` — needs migration, Stripe keys, merge |
+| 7 Open-source launch (AGPL-3.0 + CLA) | Branch `phase-6-billing` — repo goes public after merge |
+| 8 Hardening: admin & moderation dashboard | Branch `phase-6-billing` |
+
+## Phases 6–8 — paid offices, open source, admin (branch `phase-6-billing`)
+
+**Pricing.** Free office with 1 agent for every verified developer. Premium and landmark offices: £9.99/month or £59.99 one-time (10 / 25 agents). Stripe test mode until the owner switches to live keys and upgrades Vercel to Pro (Hobby is non-commercial).
+
+**How payments work** (details in `docs/STRIPE_SETUP.md`):
+- Postgres reserves the office for the 30-minute Stripe Checkout.
+- Only Stripe's signed webhook hands it over. It is idempotent, and on failure returns 500 so Stripe retries.
+- Expired, abandoned, cancelled or refunded purchases free the office.
+- A payment that completes after the office went to someone else is refunded or cancelled automatically, never taking the office from them.
+- Customer portal: change card, see invoices, cancel at period end.
+- Paid offices can't be released directly. Deleting an account cancels its subscriptions first.
+- The Stripe product, prices and portal configuration are created by the app on first use.
+
+**Open source.**
+- AGPL-3.0 `LICENSE` and a Contributor Licence Agreement (`CLA.md`), enforced by a CI check on pull requests.
+- `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` and `TRADEMARKS.md`: the name, logo and domain stay the owner's.
+- Issue and PR templates, plus private vulnerability reporting.
+- A source link in the site footer (AGPL network-use clause).
+- History scanned: no secrets.
+
+**Admin** (`/admin`, moderators and admins only):
+- Revenue: subscriptions, MRR, one-time sales and payment problems.
+- Moderation: report queue with resolve / hide review / suspend agent, latest reviews, audit log.
+- Every action is re-checked by database functions.
+
+**Tests:** 59 database tests (14 for billing and admin), 5 webhook signature tests, 66 E2E tests.
 
 ## Phases 4–5 — Open15 research and the multi-agent firm (branch `phase-4-5-research`)
 
@@ -112,4 +141,4 @@ Not verified yet (needs your Supabase project): real GitHub/email sign-in, email
 - Playwright uses your installed Google Chrome (Playwright's own Chromium doesn't support macOS 13).
 
 ## Next recommended action
-Apply the Phase 4–5 migration and merge. Then: a licensed market-data provider if real prices are wanted (paid; owner decision), an admin/moderation dashboard, and Phase 6 — Stripe in test mode.
+Apply the billing migration, add the two Stripe secrets in Vercel and create the webhook (docs/STRIPE_SETUP.md), merge, test a purchase with card 4242…, then make the repository public. Before taking real money: Vercel Pro, Stripe live keys, legal review of the terms, refund policy and CLA.

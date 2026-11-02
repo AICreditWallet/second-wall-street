@@ -316,9 +316,9 @@ insert into public.agents (id, slug, organization_id, name, category, summary, c
 insert into public.agents (id, slug, organization_id, name, category, summary, capabilities, status, disclosure, published) values ('agt-lab-risk-analyst', 'lab-risk-analyst', '00000000-0000-4000-8000-000000000020', 'Risk Analyst', 'Risk analytics', 'Measures risk of a hypothetical equal-weight basket: volatility, VaR, worst days and concentration.', array['Volatility', 'Historical VaR', 'Concentration', 'ATR stops']::text[], 'live', 'Educational research only. Not investment advice. Simulated or hypothetical results are labelled as such.', true) on conflict (id) do nothing;
 insert into public.agents (id, slug, organization_id, name, category, summary, capabilities, status, disclosure, published) values ('agt-lab-portfolio-research', 'lab-portfolio-research', '00000000-0000-4000-8000-000000000020', 'Portfolio Research', 'Portfolio simulation', 'Compares simulated allocations over recent sessions — never real accounts.', array['Equal weight', 'Inverse volatility', 'Drawdown']::text[], 'live', 'Educational research only. Not investment advice. Simulated or hypothetical results are labelled as such.', true) on conflict (id) do nothing;
 insert into public.agents (id, slug, organization_id, name, category, summary, capabilities, status, disclosure, published) values ('agt-lab-report-agent', 'lab-report-agent', '00000000-0000-4000-8000-000000000020', 'Report Agent', 'Reporting', 'Combines the team''s findings into a sourced report with clear disclosures.', array['Sourced summaries', 'Disclosures']::text[], 'live', 'Educational research only. Not investment advice. Simulated or hypothetical results are labelled as such.', true) on conflict (id) do nothing;
-insert into public.office_plans (id, tier, name, description, active) values
-  ('standard', 'standard', 'Standard office', 'Free office for every verified developer.', true),
-  ('premium', 'premium', 'Premium office', 'High-visibility location. Pricing to be approved.', false),
-  ('landmark', 'landmark', 'Landmark office', 'Signature tower location. Pricing to be approved.', false)
+insert into public.office_plans (id, tier, name, description, monthly_price_minor, lifetime_price_minor, currency, max_agents, active) values
+  ('standard', 'standard', 'Standard office', 'Free office for every verified developer, with 1 agent.', null, null, null, 1, true),
+  ('premium', 'premium', 'Premium office', 'High-visibility office with up to 10 agents.', 999, 5999, 'gbp', 10, true),
+  ('landmark', 'landmark', 'Landmark office', 'Signature tower office with up to 25 agents.', 999, 5999, 'gbp', 25, true)
   on conflict (id) do nothing;
 commit;

@@ -148,7 +148,7 @@ export function OfficeInteriorPanel({
               This is how a {TEMPLATE_LABEL[interior.template].toLowerCase()} looks. Claim it and your organisation and AI agents move in.
             </p>
             <Link href={`/claim/${encodeURIComponent(office.id)}`} className={buttonClass(free ? "primary" : "secondary", "min-h-10 w-full")}>
-              {free ? "Claim this office — free" : "Join the premium waitlist"}
+              {free ? "Claim this office — free" : "Rent this office — £9.99/month or £59.99 once"}
             </Link>
           </section>
         ) : (
