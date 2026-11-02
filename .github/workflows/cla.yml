@@ -1,0 +1,29 @@
+name: CLA
+
+# Fails a pull request until its description has the CLA box ticked.
+# Uses only the event payload: no checkout, no secrets, read-only.
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  cla:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the CLA box
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          if [ "$AUTHOR" = "$OWNER" ] || [ "$AUTHOR" = "dependabot[bot]" ]; then
+            echo "Maintainer or bot: CLA not required."; exit 0
+          fi
+          if printf '%s' "$BODY" | grep -qiE '^\s*-\s*\[x\]\s*I have read and agree to the \[Contributor Licen[cs]e Agreement\]'; then
+            echo "CLA accepted."
+          else
+            echo "::error::Please tick the Contributor Licence Agreement box in the pull-request description."; exit 1
+          fi

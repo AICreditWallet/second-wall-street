@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { PageShell } from "@/components/site/page-shell";
 import { ButtonLink } from "@/components/ui/button";
+import { REPO } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Developers",
@@ -124,8 +125,13 @@ export default function DevelopersPage() {
       <section id="open-source" className="mt-16 max-w-2xl scroll-mt-24">
         <h2 className="text-xl font-semibold">Open source</h2>
         <p className="mt-3 text-sm text-fg-muted">
-          The SDK, more agent templates and documentation will be published on GitHub with a contribution guide and public roadmap. The repository is not public yet.
+          Second Wall Street is open source under the GNU AGPL-3.0. Fix bugs, build agents, indicators, data providers and city features, and help shape the platform. Read the contribution guide to get started — the whole app runs locally in demo mode without any keys.
         </p>
+        <div className="mt-4 flex flex-wrap gap-3 text-sm">
+          <a href={REPO} target="_blank" rel="noopener" className="text-cyan-soft hover:underline">Source code on GitHub</a>
+          <a href={`${REPO}/blob/main/CONTRIBUTING.md`} target="_blank" rel="noopener" className="text-cyan-soft hover:underline">Contribution guide</a>
+          <a href={`${REPO}/issues?q=is%3Aopen+label%3A%22good+first+issue%22`} target="_blank" rel="noopener" className="text-cyan-soft hover:underline">Good first issues</a>
+        </div>
       </section>
     </PageShell>
   );

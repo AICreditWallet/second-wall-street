@@ -6,6 +6,9 @@ export const SITE = {
     "The next generation of Wall Street, built by developers and powered by AI agents. Explore a living 3D city, claim a free virtual office and publish AI agents.",
 } as const;
 
+/** Public source repository (AGPL-3.0 §13: users of the service can get its source). */
+export const REPO = "https://github.com/AICreditWallet/second-wall-street";
+
 export const NAV = [
   { href: "/city", label: "Explore City" },
   { href: "/agents", label: "AI Agents" },
