@@ -19,7 +19,12 @@ const BODY: Record<LegalSlug, string[]> = {
   "acceptable-use": [
     "No fraud, market manipulation, misleading performance claims, unlicensed financial services, malware or abuse of other users or agents.",
   ],
-  refunds: ["Refund terms for paid office subscriptions will be published before any paid plan is offered."],
+  refunds: [
+    "Monthly offices (£9.99/month) can be cancelled at any time from Manage billing. The office stays yours until the end of the month you have paid for; that month is not refunded.",
+    "One-time offices (£59.99) can be refunded in full if you ask within 14 days of purchase. You lose the office when the refund is made.",
+    "If a technical problem means you paid but did not receive the office, you are refunded automatically.",
+    "UK consumers keep their statutory rights. To ask for a refund, contact support from the email address on your account.",
+  ],
   marketplace: [
     "Providers must describe their agents accurately, disclose limitations and comply with applicable law. Listings may be moderated, suspended or removed.",
   ],

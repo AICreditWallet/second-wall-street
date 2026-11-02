@@ -42,10 +42,10 @@ for (const a of city.agents) {
   );
 }
 lines.push(
-  `insert into public.office_plans (id, tier, name, description, active) values
-  ('standard', 'standard', 'Standard office', 'Free office for every verified developer.', true),
-  ('premium', 'premium', 'Premium office', 'High-visibility location. Pricing to be approved.', false),
-  ('landmark', 'landmark', 'Landmark office', 'Signature tower location. Pricing to be approved.', false)
+  `insert into public.office_plans (id, tier, name, description, monthly_price_minor, lifetime_price_minor, currency, max_agents, active) values
+  ('standard', 'standard', 'Standard office', 'Free office for every verified developer, with 1 agent.', null, null, null, 1, true),
+  ('premium', 'premium', 'Premium office', 'High-visibility office with up to 10 agents.', 999, 5999, 'gbp', 10, true),
+  ('landmark', 'landmark', 'Landmark office', 'Signature tower office with up to 25 agents.', 999, 5999, 'gbp', 25, true)
   on conflict (id) do nothing;`,
 );
 lines.push("commit;", "");
