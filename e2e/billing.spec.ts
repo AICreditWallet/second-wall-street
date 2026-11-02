@@ -22,4 +22,9 @@ test.describe("pricing and paid offices (public)", () => {
     await page.goto("/legal/refunds");
     await expect(page.getByText("can be cancelled at any time", { exact: false })).toBeVisible();
   });
+
+  test("the admin page is for signed-in staff only", async ({ page }) => {
+    await page.goto("/admin");
+    await expect(page).toHaveURL(/\/sign-in\?next=%2Fadmin/);
+  });
 });

@@ -303,3 +303,32 @@ revoke all on function public.start_office_purchase(text, text, text, text, text
 revoke all on function public.cancel_office_purchase(uuid) from public, anon;
 grant execute on function public.start_office_purchase(text, text, text, text, text) to authenticated;
 grant execute on function public.cancel_office_purchase(uuid) to authenticated;
+
+-- ---------------------------------------------------------------- admin and moderation
+create policy "admins read all purchases" on public.office_purchases for select using (public.is_admin());
+
+create function public.resolve_report(p_report uuid, p_status text) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.is_moderator() then raise exception 'not_moderator'; end if;
+  if p_status not in ('reviewing', 'actioned', 'dismissed') then raise exception 'invalid_status'; end if;
+  update public.moderation_reports set status = p_status where id = p_report;
+  perform public.audit('report.' || p_status, 'report', p_report::text, '{}');
+end $$;
+
+-- Suspending hides an agent from the public directory and city; lifting it returns it to "in development".
+create function public.set_agent_suspended(p_agent text, p_suspended boolean) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.is_admin() then raise exception 'not_admin'; end if;
+  update public.agents
+    set status = case when p_suspended then 'suspended'::public.agent_status else 'in-development'::public.agent_status end,
+        published = case when p_suspended then false else published end
+    where id = p_agent;
+  perform public.audit(case when p_suspended then 'agent.suspend' else 'agent.unsuspend' end, 'agent', p_agent, '{}');
+end $$;
+
+revoke all on function public.resolve_report(uuid, text) from public, anon;
+revoke all on function public.set_agent_suspended(text, boolean) from public, anon;
+grant execute on function public.resolve_report(uuid, text) to authenticated;
+grant execute on function public.set_agent_suspended(text, boolean) to authenticated;

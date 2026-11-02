@@ -143,3 +143,32 @@ describe("abandoned and late checkouts", () => {
     expect((await office(premium[1]!)).status).toBe("available");
   });
 });
+
+describe("admin and moderation", () => {
+  const ADMIN = "f3f3f3f3-f3f3-4f3f-8f3f-f3f3f3f3f3f3";
+  const admin = { role: "authenticated", uid: ADMIN } as const;
+  beforeAll(async () => {
+    await createUser(db, ADMIN);
+    await db.query("insert into public.user_roles (user_id, role) values ($1, 'admin')", [ADMIN]);
+  });
+
+  it("only admins see everyone's purchases", async () => {
+    const all = await as(db, admin, (tx) => tx.query("select * from public.office_purchases"));
+    const theirs = await as(db, rival, (tx) => tx.query("select * from public.office_purchases"));
+    expect(all.rows.length).toBeGreaterThan(theirs.rows.length);
+  });
+
+  it("only admins suspend agents; only moderators resolve reports", async () => {
+    const agent = "agt-lab-risk-analyst";
+    expect(await attempt(as(db, buyer, (tx) => tx.query("select public.set_agent_suspended($1, true)", [agent])))).toBe("not_admin");
+    expect(await attempt(as(db, admin, (tx) => tx.query("select public.set_agent_suspended($1, true)", [agent])))).toBe("ok");
+    expect((await db.query<{ status: string; published: boolean }>("select status, published from public.agents where id = $1", [agent])).rows[0]).toEqual({ status: "suspended", published: false });
+    await as(db, admin, (tx) => tx.query("select public.set_agent_suspended($1, false)", [agent]));
+
+    // Reporters can file a report but not read reports back.
+    await as(db, buyer, (tx) => tx.query("insert into public.moderation_reports (reporter_id, target_type, target_id, reason) values ($1, 'agent', $2, 'Misleading claims here')", [BUYER, agent]));
+    const id = (await db.query<{ id: string }>("select id from public.moderation_reports where target_id = $1", [agent])).rows[0]!.id;
+    expect(await attempt(as(db, buyer, (tx) => tx.query("select public.resolve_report($1, 'dismissed')", [id])))).toBe("not_moderator");
+    expect(await attempt(as(db, admin, (tx) => tx.query("select public.resolve_report($1, 'actioned')", [id])))).toBe("ok");
+  });
+});
