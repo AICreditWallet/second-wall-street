@@ -42,7 +42,7 @@ TypeScript strict mode, Tailwind, React Server Components by default. Match the 
 
 ## Contributor Licence Agreement
 
-To keep the project able to evolve (for example to change licence terms or offer a commercial licence), every contributor agrees to the [CLA](CLA.md). You keep the copyright in your work. Tick the CLA box in the pull-request template; a check fails until it is ticked.
+To keep the project able to evolve (for example to change licence terms or offer a commercial licence), every contributor agrees to the [CLA](CLA.md). You keep the copyright in your work. Tick the CLA box in the pull-request template, or comment "I have read the CLA Document and I hereby sign the CLA" on your pull request. A check fails until you have done one of these; if you sign by comment after opening the PR, push a commit or edit the description to re-run it.
 
 ## Code of conduct
 

@@ -2,7 +2,7 @@
 
 _Version 1.0. Plain-language agreement; it has not yet been reviewed by a lawyer._
 
-By ticking the CLA box in a pull request to this repository, you ("you") agree to the following with the owner of the Second Wall Street project and the `AICreditWallet/second-wall-street` repository ("the Maintainer") for every contribution you submit (code, documentation, assets or other material, "Contribution").
+By ticking the CLA box in a pull request to this repository, or by commenting "I have read the CLA Document and I hereby sign the CLA" on it from your own account, you ("you") agree to the following with the owner of the Second Wall Street project and the `AICreditWallet/second-wall-street` repository ("the Maintainer") for every contribution you submit (code, documentation, assets or other material, "Contribution").
 
 1. **You keep your copyright.** Nothing here transfers ownership of your Contribution.
 2. **Copyright licence.** You grant the Maintainer and recipients of software distributed by the Maintainer a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable licence to reproduce, prepare derivative works of, publicly display, publicly perform, sublicense and distribute your Contribution and derivative works.
