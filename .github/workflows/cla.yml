@@ -1,20 +1,26 @@
 name: CLA
 
-# Fails a pull request until its description has the CLA box ticked.
-# Uses only the event payload: no checkout, no secrets, read-only.
+# Passes a pull request when its author has agreed to CLA.md, either by
+# ticking the box in the description or by commenting the signing sentence.
+# Reads only the event payload and the PR's comments: no checkout, no
+# contributor code runs, read-only token.
 on:
   pull_request_target:
     types: [opened, edited, synchronize, reopened]
 
 permissions:
   pull-requests: read
+  issues: read
 
 jobs:
   cla:
     runs-on: ubuntu-latest
     steps:
-      - name: Check the CLA box
+      - name: Check the CLA
         env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
           BODY: ${{ github.event.pull_request.body }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
           OWNER: ${{ github.repository_owner }}
@@ -23,7 +29,13 @@ jobs:
             echo "Maintainer or bot: CLA not required."; exit 0
           fi
           if printf '%s' "$BODY" | grep -qiE '^\s*-\s*\[x\]\s*I have read and agree to the \[Contributor Licen[cs]e Agreement\]'; then
-            echo "CLA accepted."
-          else
-            echo "::error::Please tick the Contributor Licence Agreement box in the pull-request description."; exit 1
+            echo "CLA accepted (ticked box)."; exit 0
           fi
+          # Only the PR author's own comment counts.
+          if gh api "repos/$REPO/issues/$PR/comments" --paginate \
+               --jq ".[] | select(.user.login == \"$AUTHOR\") | .body" \
+             | grep -qiE 'I have read the CLA Document and I hereby sign the CLA'; then
+            echo "CLA accepted (signing comment by $AUTHOR)."; exit 0
+          fi
+          echo "::error::Please tick the Contributor Licence Agreement box in the pull-request description, or comment: I have read the CLA Document and I hereby sign the CLA"
+          exit 1
