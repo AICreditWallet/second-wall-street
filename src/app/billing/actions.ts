@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { friendlyError } from "@/lib/errors";
-import { ensurePortalConfiguration, ensurePrice, getStripe } from "@/lib/billing/stripe";
+import { checkoutParams } from "@/lib/billing/checkout";
+import { automaticTax, ensurePortalConfiguration, ensurePrice, getStripe, sellingEnabled } from "@/lib/billing/stripe";
 import { revalidateCity } from "@/lib/revalidate";
 import { SITE } from "@/lib/site";
 import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabase/server";
@@ -24,7 +25,7 @@ export async function startCheckout(_: FormState, formData: FormData): Promise<F
   const admin = createSupabaseAdminClient();
   const stripe = getStripe();
   if (!user || !supabase) return { message: "Please sign in to continue." };
-  if (!stripe || !admin) return { message: "Payments aren't switched on yet. Please try again soon." };
+  if (!stripe || !admin || !sellingEnabled) return { message: "Payments aren't switched on yet. Please try again soon." };
 
   let org: { name: string; slug: string; tagline: string } | null = null;
   if (formData.get("newOrg") === "1") {
@@ -53,23 +54,18 @@ export async function startCheckout(_: FormState, formData: FormData): Promise<F
   try {
     const price = await ensurePrice(stripe, kind.data);
     const { data: customer } = await supabase.from("billing_customers").select("stripe_customer_id").eq("user_id", user.id).maybeSingle();
-    const metadata = { purchase_id: purchase.purchase_id, office_id: purchase.office_id };
     const session = await stripe.checkout.sessions.create(
-      {
-        mode: kind.data === "monthly" ? "subscription" : "payment",
-        line_items: [{ price, quantity: 1 }],
-        client_reference_id: purchase.purchase_id,
-        metadata,
-        ...(customer?.stripe_customer_id ? { customer: customer.stripe_customer_id } : { customer_email: user.email ?? undefined }),
-        ...(kind.data === "monthly"
-          ? { subscription_data: { metadata } }
-          : { payment_intent_data: { metadata }, ...(customer?.stripe_customer_id ? {} : { customer_creation: "always" as const }), invoice_creation: { enabled: true } }),
-        expires_at: Math.floor(Date.now() / 1000) + SESSION_MINUTES * 60,
-        success_url: `${SITE.url}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${SITE.url}/claim/${purchase.office_id}?checkout=cancelled`,
-        allow_promotion_codes: true,
-        billing_address_collection: "auto",
-      },
+      checkoutParams({
+        kind: kind.data,
+        price,
+        purchaseId: purchase.purchase_id,
+        officeId: purchase.office_id,
+        customerId: customer?.stripe_customer_id ?? null,
+        email: user.email,
+        siteUrl: SITE.url,
+        automaticTax,
+        expiresAt: Math.floor(Date.now() / 1000) + SESSION_MINUTES * 60,
+      }),
       { idempotencyKey: `checkout-${purchase.purchase_id}` },
     );
     const attach = await admin.rpc("billing_attach_session", { p_purchase: purchase.purchase_id, p_session: session.id });

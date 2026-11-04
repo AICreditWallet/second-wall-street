@@ -41,10 +41,21 @@ Deleting an account cancels its subscriptions first.
 
 ## Going live
 
+Live payments stay off until `STRIPE_SECRET_KEY` is a live key **and** `SELLER_LEGAL_NAME`, `SELLER_ADDRESS` and `STRIPE_AUTOMATIC_TAX=1` are set.
+
 1. Upgrade Vercel to Pro (Hobby is non-commercial).
-2. Complete Stripe account activation and switch the Dashboard to live mode.
-3. Replace both variables with live values (`sk_live_…` and the live endpoint's `whsec_…`) and redeploy.
-4. Make one real purchase and refund it.
+2. Complete Stripe account activation, in the seller's legal name, with a bank account for payouts.
+3. In Stripe live mode, turn on Stripe Tax, add your VAT registration, and put your VAT number on invoices.
+4. Add a live webhook endpoint with the same URL and events as above.
+5. In Vercel, **Production only**: replace `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` with live values, and set `STRIPE_AUTOMATIC_TAX=1`, `SELLER_LEGAL_NAME`, `SELLER_ADDRESS` and `SELLER_VAT_NUMBER`. Keep test keys in Preview, and never authorise preview deployments of outside pull requests. Then redeploy.
+6. Make one real purchase, check the invoice shows VAT and the office is handed over, then cancel and refund it.
+
+Test-mode customers don't exist in live mode, so clear test billing records before switching.
+
+## Refunds (first 14 days)
+
+- **One-time:** refund the payment in Stripe. `charge.refunded` frees the office.
+- **Monthly:** refund the payment and cancel the subscription immediately in Stripe. `customer.subscription.deleted` frees the office.
 
 ## Testing
 

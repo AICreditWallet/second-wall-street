@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LEGAL_DOCS, REPO, SITE } from "@/lib/site";
+import { LEGAL_DOCS, REPO, SITE, SUPPORT_EMAIL } from "@/lib/site";
 import { Logo } from "./logo";
 
 const COLUMNS = [
@@ -35,7 +35,11 @@ export function SiteFooter() {
         <p className="mx-auto max-w-7xl px-4 py-6 text-xs leading-relaxed text-fg-subtle sm:px-6">
           Second Wall Street is a virtual office platform, AI software directory and financial education environment. It is not a
           securities exchange, broker-dealer or investment adviser, and nothing here is investment advice. Offices are virtual
-          digital locations, not real estate or securities. © {new Date().getFullYear()} Second Wall Street. Open source under the{" "}
+          digital locations, not real estate or securities. Support:{" "}
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="underline hover:text-fg">
+            {SUPPORT_EMAIL}
+          </a>
+          . © {new Date().getFullYear()} Second Wall Street. Open source under the{" "}
           <a href={REPO} className="underline hover:text-fg" rel="noopener">
             GNU AGPL-3.0
           </a>

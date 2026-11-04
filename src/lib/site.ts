@@ -7,6 +7,8 @@ export const SITE = {
 } as const;
 
 /** Public source repository (AGPL-3.0 §13: users of the service can get its source). */
+export const SUPPORT_EMAIL = "support@secondwallstreet.com";
+
 export const REPO = "https://github.com/AICreditWallet/second-wall-street";
 
 export const NAV = [

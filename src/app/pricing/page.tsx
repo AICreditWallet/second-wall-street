@@ -42,7 +42,7 @@ const PLANS = [
 
 export default function PricingPage() {
   return (
-    <PageShell eyebrow="Pricing" title="Start free. Upgrade when you need room." intro={<p>Prices in GBP and include any applicable tax. Payments are handled by Stripe; we never see your card.</p>}>
+    <PageShell eyebrow="Pricing" title="Start free. Upgrade when you need room." intro={<p>Prices are in GBP and include VAT. Payments are handled by Stripe; we never see your card.</p>}>
       {stripeMode === "test" && (
         <p role="note" className="mb-8 rounded-2xl border border-gold/40 bg-gold/10 p-4 text-sm">
           <strong>Payments are in test mode.</strong> No real money is taken. Use card 4242 4242 4242 4242 with any future date and any CVC.
