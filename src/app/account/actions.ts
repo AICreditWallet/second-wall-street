@@ -29,11 +29,11 @@ export async function deleteAccount(_: FormState, formData: FormData): Promise<F
   const { data: subs } = await supabase.from("office_purchases").select("stripe_subscription_id").in("status", ["active", "past_due"]).not("stripe_subscription_id", "is", null);
   if (subs?.length) {
     const stripe = getStripe();
-    if (!stripe) return { message: "You have an active office subscription. Cancel it from your dashboard first, or contact support." };
+    if (!stripe) return { message: "You have an active office subscription. Cancel it from your dashboard first, or email support@secondwallstreet.com." };
     try {
       for (const s of subs) await stripe.subscriptions.cancel(s.stripe_subscription_id as string, { prorate: false });
     } catch {
-      return { message: "We couldn't cancel your subscription. Please try again or contact support." };
+      return { message: "We couldn't cancel your subscription. Please try again or email support@secondwallstreet.com." };
     }
   }
 

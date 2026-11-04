@@ -1,5 +1,6 @@
 import "server-only";
 import Stripe from "stripe";
+import { sellerConfigured } from "@/lib/seller";
 import { PRICES, type PlanKind } from "./plans";
 
 /**
@@ -12,6 +13,12 @@ import { PRICES, type PlanKind } from "./plans";
 const KEY = process.env.STRIPE_SECRET_KEY ?? "";
 
 export const stripeMode: "test" | "live" | null = /^(sk|rk)_test_/.test(KEY) ? "test" : /^(sk|rk)_live_/.test(KEY) ? "live" : null;
+
+/** Turn on once Stripe Tax is active in the Stripe account; otherwise Checkout refuses to open. */
+export const automaticTax = process.env.STRIPE_AUTOMATIC_TAX === "1";
+
+/** Real money needs the legally required seller details and tax on, so live keys alone can't start charging. */
+export const sellingEnabled = stripeMode === "test" || (stripeMode === "live" && sellerConfigured && automaticTax);
 
 let client: Stripe | null = null;
 export function getStripe(): Stripe | null {
@@ -29,6 +36,8 @@ export async function ensurePrice(stripe: Stripe, kind: PlanKind): Promise<strin
   if (cached) return cached;
   const found = await stripe.prices.list({ lookup_keys: [lookupKey(kind)], active: true, limit: 1 });
   if (found.data[0]) {
+    // The advertised price includes tax, so tax must never be added on top.
+    if (found.data[0].tax_behavior === "unspecified") await stripe.prices.update(found.data[0].id, { tax_behavior: "inclusive" });
     priceCache.set(kind, found.data[0].id);
     return found.data[0].id;
   }
@@ -45,6 +54,7 @@ export async function ensurePrice(stripe: Stripe, kind: PlanKind): Promise<strin
       product: product.id,
       currency: p.currency,
       unit_amount: p.amountMinor,
+      tax_behavior: "inclusive",
       lookup_key: lookupKey(kind),
       nickname: kind === "monthly" ? "Premium office — monthly" : "Premium office — one-time",
       ...(kind === "monthly" ? { recurring: { interval: "month" as const } } : {}),

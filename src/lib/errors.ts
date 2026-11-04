@@ -13,7 +13,7 @@ const MESSAGES: Record<string, string> = {
   slug_reserved: "That web address is reserved. Please choose another.",
   slug_taken: "That web address is already taken. Please choose another.",
   organization_invalid: "Please check your organisation name and web address.",
-  organization_suspended: "Your organisation is suspended. Contact support.",
+  organization_suspended: "Your organisation is suspended. Contact support@secondwallstreet.com.",
   free_office_limit: "You already have a free office. Release it first to move somewhere else.",
   not_office_owner: "Only the office owner can do that.",
   agent_limit_reached: "You've reached your office's agent limit (1 on a free office, 10 on premium, 25 on landmark). Upgrade to a premium office for more.",

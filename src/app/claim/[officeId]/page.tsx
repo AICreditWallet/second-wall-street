@@ -14,7 +14,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { CheckoutForm, ClaimForm } from "../claim-form";
 import { cancelCheckout } from "../../billing/actions";
 import { AGENT_LIMITS } from "@/lib/billing/plans";
-import { getStripe, stripeMode } from "@/lib/billing/stripe";
+import { getStripe, sellingEnabled, stripeMode } from "@/lib/billing/stripe";
 import { SubmitButton } from "@/components/ui/form";
 
 export const metadata: Metadata = { title: "Claim an Office", robots: { index: false } };
@@ -79,7 +79,7 @@ export default async function ClaimPage({ params, searchParams }: { params: Prom
       </div>
     );
   } else if (office.tier !== "standard") {
-    body = stripeMode ? (
+    body = sellingEnabled ? (
       <CheckoutForm officeId={office.id} existingOrgName={owned?.org.name ?? null} siteHost={new URL(SITE.url).host} agentLimit={AGENT_LIMITS[office.tier]} testMode={stripeMode === "test"} />
     ) : (
       <div className="space-y-4">
