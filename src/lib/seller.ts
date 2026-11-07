@@ -10,3 +10,7 @@ export const SELLER = {
 };
 
 export const sellerConfigured = Boolean(SELLER.name && SELLER.address);
+
+/** A seller may only charge VAT once registered, so all price wording follows the VAT number. */
+export const vatRegistered = Boolean(SELLER.vatNumber);
+export const PRICE_NOTE = vatRegistered ? "Prices are in GBP and include VAT." : "Prices are in GBP. No VAT is charged.";

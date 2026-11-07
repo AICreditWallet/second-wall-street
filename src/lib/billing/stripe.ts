@@ -1,6 +1,6 @@
 import "server-only";
 import Stripe from "stripe";
-import { sellerConfigured } from "@/lib/seller";
+import { sellerConfigured, vatRegistered } from "@/lib/seller";
 import { PRICES, type PlanKind } from "./plans";
 
 /**
@@ -14,11 +14,11 @@ const KEY = process.env.STRIPE_SECRET_KEY ?? "";
 
 export const stripeMode: "test" | "live" | null = /^(sk|rk)_test_/.test(KEY) ? "test" : /^(sk|rk)_live_/.test(KEY) ? "live" : null;
 
-/** Turn on once Stripe Tax is active in the Stripe account; otherwise Checkout refuses to open. */
+/** Only for a VAT-registered seller with Stripe Tax active; otherwise Checkout refuses to open. */
 export const automaticTax = process.env.STRIPE_AUTOMATIC_TAX === "1";
 
-/** Real money needs the legally required seller details and tax on, so live keys alone can't start charging. */
-export const sellingEnabled = stripeMode === "test" || (stripeMode === "live" && sellerConfigured && automaticTax);
+/** A registered seller must collect VAT, and everyone must publish seller details, so live keys alone can't start charging. */
+export const sellingEnabled = stripeMode === "test" || (stripeMode === "live" && sellerConfigured && (!vatRegistered || automaticTax));
 
 let client: Stripe | null = null;
 export function getStripe(): Stripe | null {
