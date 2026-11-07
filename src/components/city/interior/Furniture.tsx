@@ -126,6 +126,26 @@ function Plant({ kit, scale }: { kit: InteriorKit; scale: number }) {
   );
 }
 
+function Bookshelf({ kit }: { kit: InteriorKit }) {
+  const shelfYs = [0.3, 0.8, 1.3];
+  return (
+    <>
+      {[-0.58, 0.58].map((x) => (
+        <Box key={x} kit={kit} mat={kit.mats.dark} p={[x, 0.9, 0]} s={[0.04, 1.8, 0.4]} />
+      ))}
+      <Box kit={kit} mat={kit.mats.dark} p={[0, 0.9, -0.18]} s={[1.12, 1.8, 0.04]} />
+      {shelfYs.map((y) => (
+        <Box key={y} kit={kit} mat={kit.mats.deskWood} p={[0, y, 0]} s={[1.12, 0.04, 0.36]} />
+      ))}
+      {shelfYs.map((y) =>
+        [-0.42, -0.2, 0.02, 0.24].map((x, i) => (
+          <Box key={`${y}-${x}`} kit={kit} mat={i % 2 ? kit.mats.fabric : kit.mats.fabricWarm} p={[x, y + 0.14, 0]} s={[0.16, 0.24, 0.3]} />
+        )),
+      )}
+    </>
+  );
+}
+
 function Kitchen({ kit }: { kit: InteriorKit }) {
   return (
     <>
@@ -194,6 +214,12 @@ export function FurnitureItem({ kit, item }: { kit: InteriorKit; item: Item }) {
       return (
         <Group x={item.x} z={item.z} rot={item.rot}>
           <Reception kit={kit} />
+        </Group>
+      );
+    case "bookshelf":
+      return (
+        <Group x={item.x} z={item.z} rot={item.rot}>
+          <Bookshelf kit={kit} />
         </Group>
       );
     case "rug":
