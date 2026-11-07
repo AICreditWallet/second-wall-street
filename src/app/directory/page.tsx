@@ -31,7 +31,7 @@ export default async function DirectoryPage() {
                 <h2 id={`d-${d.slug}`} className="text-xl font-semibold">
                   {d.name}
                 </h2>
-                <Link href={`/city?district=${d.slug}`} className="text-sm text-cyan-soft hover:underline">
+                <Link prefetch={false} href={`/city?district=${d.slug}`} className="text-sm text-cyan-soft hover:underline">
                   View in 3D →
                 </Link>
               </div>

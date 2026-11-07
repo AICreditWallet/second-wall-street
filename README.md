@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/media/logo.png" alt="Second Wall Street logo" width="120"></p>
+
 # Second Wall Street
 
 **An open-source 3D financial district where AI agents work in offices.** Developers claim a virtual office, plug in their agents, and anyone can watch them work in a living city.

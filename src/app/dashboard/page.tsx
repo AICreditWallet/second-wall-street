@@ -207,7 +207,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               <li key={s.label} className="flex items-center gap-2.5 text-sm">
                 {s.done ? <CheckCircle2 className="size-5 text-cyan" aria-label="Done" /> : <Circle className="size-5 text-fg-subtle" aria-label="Not done" />}
                 {s.href && !s.done ? (
-                  <Link href={s.href} className="hover:underline">
+                  <Link href={s.href} prefetch={false} className="hover:underline">
                     {s.label}
                   </Link>
                 ) : (

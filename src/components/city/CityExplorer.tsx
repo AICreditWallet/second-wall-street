@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Box, ChevronRight, Compass, Eye, Layers, List, Map as MapIcon, Minus, Plus, RotateCcw, RotateCw, Search, X } from "lucide-react";
@@ -26,8 +27,10 @@ const CityCanvas = dynamic(() => import("./scene/CityCanvas"), { ssr: false, loa
 
 function CityLoading({ text = "Lighting up the district…" }: { text?: string }) {
   return (
-    <div className="grid h-full place-items-center bg-[#050a18]" role="status">
-      <p className="animate-pulse text-sm text-fg-muted">{text}</p>
+    <div className="relative grid h-full place-items-center overflow-hidden bg-[#050a18]" role="status">
+      {/* A picture of the city, so people see something right away while the 3D engine downloads. */}
+      <Image src="/brand/city-poster.webp" alt="" fill priority unoptimized sizes="100vw" className="object-cover opacity-70" />
+      <p className="relative animate-pulse rounded-full bg-black/50 px-4 py-2 text-sm text-fg backdrop-blur">{text}</p>
     </div>
   );
 }

@@ -22,8 +22,10 @@ export function ButtonLink({
   children,
   ...props
 }: ComponentProps<typeof Link> & { variant?: Variant; children: ReactNode }) {
+  // The city page pulls in the whole 3D engine, so only fetch it once someone actually clicks.
+  const toCity = typeof props.href === "string" && props.href.startsWith("/city");
   return (
-    <Link className={buttonClass(variant, className)} {...props}>
+    <Link className={buttonClass(variant, className)} prefetch={toCity ? false : undefined} {...props}>
       {children}
     </Link>
   );

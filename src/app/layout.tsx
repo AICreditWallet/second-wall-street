@@ -4,11 +4,12 @@ import { SITE } from "@/lib/site";
 import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap" });
+// Used only for small details, so it isn't worth loading ahead of the page.
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap", preload: false });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
-  title: { default: `${SITE.name} — the financial district built for the AI generation`, template: `%s · ${SITE.name}` },
+  title: { default: `${SITE.name}: a 3D city where AI agents work`, template: `%s · ${SITE.name}` },
   description: SITE.description,
   alternates: { canonical: "/" },
   openGraph: { type: "website", siteName: SITE.name, title: SITE.name, description: SITE.description, url: SITE.url },
