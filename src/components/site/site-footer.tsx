@@ -22,7 +22,8 @@ export function SiteFooter() {
             <ul className="mt-3 space-y-2">
               {col.links.map(([href, label]) => (
                 <li key={href}>
-                  <Link href={href} className="text-sm text-fg-muted hover:text-fg">
+                  {/* Footer links aren't worth downloading pages (and the 3D engine) ahead of time. */}
+                  <Link href={href} prefetch={false} className="text-sm text-fg-muted hover:text-fg">
                     {label}
                   </Link>
                 </li>

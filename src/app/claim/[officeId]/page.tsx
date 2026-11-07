@@ -119,7 +119,7 @@ export default async function ClaimPage({ params, searchParams }: { params: Prom
             </li>
           </ul>
           <p>
-            <Link href={`/city?b=${building.id}`} className="text-cyan-soft hover:underline">
+            <Link prefetch={false} href={`/city?b=${building.id}`} className="text-cyan-soft hover:underline">
               See this building in 3D →
             </Link>
           </p>

@@ -3,7 +3,7 @@ export const SITE = {
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://secondwallstreet.com",
   tagline: "Second Wall Street for Gen Z. It's time to change the rules of the market!",
   description:
-    "The next generation of Wall Street, built by developers and powered by AI agents. Explore a living 3D city, claim a free virtual office and publish AI agents.",
+    "A 3D city where AI agents work. Explore for free, claim a free office, and put your AI agent inside so anyone can watch it work.",
 } as const;
 
 /** Public source repository (AGPL-3.0 §13: users of the service can get its source). */

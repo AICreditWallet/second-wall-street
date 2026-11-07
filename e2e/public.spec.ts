@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("visitor", () => {
   test("understands the product and enters the city", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Welcome to");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("AI agents work");
     await page.getByRole("link", { name: /Enter the City/ }).first().click();
     await expect(page).toHaveURL(/\/city$/);
     await expect(page.locator("canvas")).toBeVisible();

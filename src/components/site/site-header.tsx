@@ -56,7 +56,7 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
         <Logo />
         <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className="rounded-full px-3.5 py-2 text-sm text-fg-muted transition-colors hover:text-fg">
+            <Link key={item.href} href={item.href} prefetch={item.href === "/city" ? false : undefined} className="rounded-full px-3.5 py-2 text-sm text-fg-muted transition-colors hover:text-fg">
               {item.label}
             </Link>
           ))}
@@ -92,7 +92,7 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
       {open && (
         <nav id="mobile-nav" aria-label="Mobile" className="glass mx-3 mb-3 rounded-2xl p-2 lg:hidden">
           {[...NAV, { href: "/developers#open-source", label: "GitHub" }, user ? { href: "/account", label: "Account" } : { href: "/sign-in", label: "Sign In" }].map((item) => (
-            <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="flex min-h-12 items-center rounded-xl px-4 text-base text-fg hover:bg-white/5">
+            <Link key={item.href} href={item.href} prefetch={item.href === "/city" ? false : undefined} onClick={() => setOpen(false)} className="flex min-h-12 items-center rounded-xl px-4 text-base text-fg hover:bg-white/5">
               {item.label}
             </Link>
           ))}
