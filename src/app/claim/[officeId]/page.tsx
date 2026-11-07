@@ -15,6 +15,7 @@ import { CheckoutForm, ClaimForm } from "../claim-form";
 import { cancelCheckout } from "../../billing/actions";
 import { AGENT_LIMITS } from "@/lib/billing/plans";
 import { getStripe, sellingEnabled, stripeMode } from "@/lib/billing/stripe";
+import { PRICE_NOTE } from "@/lib/seller";
 import { SubmitButton } from "@/components/ui/form";
 
 export const metadata: Metadata = { title: "Claim an Office", robots: { index: false } };
@@ -80,7 +81,7 @@ export default async function ClaimPage({ params, searchParams }: { params: Prom
     );
   } else if (office.tier !== "standard") {
     body = sellingEnabled ? (
-      <CheckoutForm officeId={office.id} existingOrgName={owned?.org.name ?? null} siteHost={new URL(SITE.url).host} agentLimit={AGENT_LIMITS[office.tier]} testMode={stripeMode === "test"} />
+      <CheckoutForm officeId={office.id} existingOrgName={owned?.org.name ?? null} siteHost={new URL(SITE.url).host} agentLimit={AGENT_LIMITS[office.tier]} testMode={stripeMode === "test"} priceNote={PRICE_NOTE} />
     ) : (
       <div className="space-y-4">
         <p className="text-fg-muted">Premium offices open for payment shortly. In the meantime, pick a free office — you can move later.</p>

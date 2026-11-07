@@ -71,7 +71,7 @@ const PLAN_TEXT: Record<PlanKind, { title: string; note: string }> = {
   lifetime: { title: "One-time", note: "Pay once and keep the office for as long as Second Wall Street runs." },
 };
 
-export function CheckoutForm({ officeId, existingOrgName, siteHost, agentLimit, testMode }: { officeId: string; existingOrgName: string | null; siteHost: string; agentLimit: number; testMode: boolean }) {
+export function CheckoutForm({ officeId, existingOrgName, siteHost, agentLimit, testMode, priceNote }: { officeId: string; existingOrgName: string | null; siteHost: string; agentLimit: number; testMode: boolean; priceNote: string }) {
   const [state, action] = useActionState(startCheckout, null);
   const [kind, setKind] = useState<PlanKind>("monthly");
   return (
@@ -99,7 +99,7 @@ export function CheckoutForm({ officeId, existingOrgName, siteHost, agentLimit, 
         {kind === "monthly" ? "/month" : ""}
       </SubmitButton>
       <p className="text-center text-xs text-fg-subtle">
-        Includes up to {agentLimit} AI agents. Prices include VAT. {kind === "monthly" ? "Renews monthly until you cancel. " : ""}Payment is handled by Stripe; we never see your card. The office is held for you for 30 minutes while you pay. By continuing you agree to the{" "}
+        Includes up to {agentLimit} AI agents. {priceNote} {kind === "monthly" ? "Renews monthly until you cancel. " : ""}Payment is handled by Stripe; we never see your card. The office is held for you for 30 minutes while you pay. By continuing you agree to the{" "}
         <a href="/legal/terms" target="_blank" className="underline">terms</a> and <a href="/legal/refunds" target="_blank" className="underline">refund policy</a>.
         {testMode && " Test mode: use card 4242 4242 4242 4242 — no real money is taken."}
       </p>

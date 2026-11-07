@@ -41,16 +41,19 @@ Deleting an account cancels its subscriptions first.
 
 ## Going live
 
-Live payments stay off until `STRIPE_SECRET_KEY` is a live key **and** `SELLER_LEGAL_NAME`, `SELLER_ADDRESS` and `STRIPE_AUTOMATIC_TAX=1` are set.
+Live payments stay off until `STRIPE_SECRET_KEY` is a live key and `SELLER_LEGAL_NAME` and `SELLER_ADDRESS` are set.
 
 1. Upgrade Vercel to Pro (Hobby is non-commercial).
 2. Complete Stripe account activation, in the seller's legal name, with a bank account for payouts.
-3. In Stripe live mode, turn on Stripe Tax, add your VAT registration, and put your VAT number on invoices.
-4. Add a live webhook endpoint with the same URL and events as above.
-5. In Vercel, **Production only**: replace `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` with live values, and set `STRIPE_AUTOMATIC_TAX=1`, `SELLER_LEGAL_NAME`, `SELLER_ADDRESS` and `SELLER_VAT_NUMBER`. Keep test keys in Preview, and never authorise preview deployments of outside pull requests. Then redeploy.
-6. Make one real purchase, check the invoice shows VAT and the office is handed over, then cancel and refund it.
+3. Add a live webhook endpoint with the same URL and events as above.
+4. In Vercel, **Production only**: replace `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` with live values, and set `SELLER_LEGAL_NAME` and `SELLER_ADDRESS`. Keep test keys in Preview, and never authorise preview deployments of outside pull requests. Then redeploy.
+5. Make one real purchase, check the receipt and that the office is handed over, then cancel and refund it.
 
 Test-mode customers don't exist in live mode, so clear test billing records before switching.
+
+### If you register for VAT later
+
+Turn on Stripe Tax with your VAT registration, then set `SELLER_VAT_NUMBER` and `STRIPE_AUTOMATIC_TAX=1` and redeploy. Prices stay the same and now include VAT, and the pricing wording and terms change automatically.
 
 ## Refunds (first 14 days)
 

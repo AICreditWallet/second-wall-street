@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { SELLER, sellerConfigured } from "@/lib/seller";
+import { SELLER, sellerConfigured, vatRegistered } from "@/lib/seller";
 import { LEGAL_DOCS, SUPPORT_EMAIL, type LegalSlug } from "@/lib/site";
 import { PageShell } from "@/components/site/page-shell";
 
@@ -10,7 +10,7 @@ const BODY: Record<LegalSlug, string[]> = {
   terms: [
     "Second Wall Street provides virtual offices, an AI software directory and financial education tools. By creating an account or buying an office, you agree to these terms.",
     "Offices are digital listings in a virtual city. They are not real estate, securities or investment products, and they give you no ownership of any part of the platform.",
-    "A free office is available to each verified developer and includes 1 AI agent. A premium office costs £9.99 per month or £59.99 once, and includes up to 10 AI agents (25 in a landmark tower). All prices are in GBP and include VAT. Tax on your order is shown at checkout.",
+    "A free office is available to each verified developer and includes 1 AI agent. A premium office costs £9.99 per month or £59.99 once, and includes up to 10 AI agents (25 in a landmark tower). " + (vatRegistered ? "All prices are in GBP and include VAT. Tax on your order is shown at checkout." : "All prices are in GBP. We are not VAT registered, so no VAT is charged."),
     "Monthly offices renew every month and your card is charged until you cancel. You can cancel at any time from Manage billing on your dashboard, and you keep the office until the end of the period you have paid for. Your office is held for 30 minutes while you pay; if you don't finish, it is released.",
     "A one-time office has no renewals. You keep it for as long as we run the Second Wall Street service, while you follow these terms. It is not a transfer of ownership. If we ever close the service, we will give you at least 30 days' notice by email.",
     "You are responsible for your account, your organisation's content and any agents you connect. You must follow the Acceptable Use and Marketplace policies. We may suspend or remove listings, offices or accounts that break these terms; if we do so for a serious breach, we may not refund you, except where the law requires it.",
@@ -22,7 +22,7 @@ const BODY: Record<LegalSlug, string[]> = {
     "We collect what we need to run the service: your email address, your name, profile picture and username if you sign in with GitHub, the organisation and agent details you enter, reviews and reports you submit, and basic technical logs.",
     "We use this to provide your account and offices, take payments, keep the platform secure, send service messages and meet legal duties such as tax records. Our legal bases are performing our contract with you, our legitimate interest in running and protecting the service, and legal obligation.",
     "Your organisation's name and page, published agents and reviews are public. We don't sell your personal data.",
-    "We use these providers to run the service: Supabase (database and sign-in), Vercel (hosting), Stripe (payments, tax and invoices) and GitHub (optional sign-in). Stripe handles card details; we never see or store them. Some of these providers process data in the United States under recognised transfer safeguards.",
+    "We use these providers to run the service: Supabase (database and sign-in), Vercel (hosting), Stripe (payments and invoices) and GitHub (optional sign-in). Stripe handles card details; we never see or store them. Some of these providers process data in the United States under recognised transfer safeguards.",
     "We keep account data until you delete your account. We keep payment and tax records for as long as the law requires, usually 6 years.",
     "You can export your data or delete your account from your account page. You can also ask us to access, correct, delete or restrict your data, or object to how we use it, by emailing us. If you're unhappy with how we handle your data, you can complain to the UK Information Commissioner's Office (ico.org.uk).",
   ],

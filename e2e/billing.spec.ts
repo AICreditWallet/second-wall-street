@@ -6,6 +6,8 @@ test.describe("pricing and paid offices (public)", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Start free");
     for (const price of [/£0/, /£9\.99/, /£59\.99/]) await expect(page.getByRole("main").getByText(price).first()).toBeVisible();
     await expect(page.getByText("1 AI agent listed", { exact: false })).toBeVisible();
+    // No VAT number configured here, so the site must not claim to charge VAT.
+    if (!process.env.E2E_BASE_URL) await expect(page.getByText("No VAT is charged", { exact: false })).toBeVisible();
   });
 
   test("buying an office requires signing in", async ({ page }) => {
