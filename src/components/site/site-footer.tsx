@@ -3,7 +3,7 @@ import { LEGAL_DOCS, REPO, SITE, SUPPORT_EMAIL } from "@/lib/site";
 import { Logo } from "./logo";
 
 const COLUMNS = [
-  { title: "Product", links: [["/city", "Explore City"], ["/directory", "Office Directory"], ["/agents", "AI Agents"], ["/research", "Research"], ["/pricing", "Pricing"]] },
+  { title: "Product", links: [["/city", "Explore City"], ["/directory", "Office Directory"], ["/agents", "AI Agents"], ["/research", "Research"], ["/pricing", "Pricing"], ["/contact", "Help & contact"]] },
   { title: "Developers", links: [["/developers", "Overview"], ["/developers#integrations", "Connect an agent"], ["/developers#open-source", "Open source"]] },
   { title: "Legal", links: Object.entries(LEGAL_DOCS).map(([slug, title]) => [`/legal/${slug}`, title]) },
 ] as const;

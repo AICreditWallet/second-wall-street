@@ -30,3 +30,8 @@ export async function suspendAgent(form: FormData) {
   if (p.success) await call("set_agent_suspended", { p_agent: p.data.id, p_suspended: p.data.suspend === "1" });
   revalidateCity();
 }
+
+export async function setContactStatus(form: FormData) {
+  const p = z.object({ id: z.string().uuid(), status: z.enum(["new", "handled"]) }).safeParse({ id: form.get("id"), status: form.get("status") });
+  if (p.success) await call("set_contact_message_status", { p_id: p.data.id, p_status: p.data.status });
+}

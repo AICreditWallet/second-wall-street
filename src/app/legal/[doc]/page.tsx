@@ -19,8 +19,8 @@ const BODY: Record<LegalSlug, string[]> = {
     "We may update these terms and will give notice of important changes. These terms are governed by the law of England and Wales. If you are a consumer, you keep the mandatory protections and the right to bring a claim where you live.",
   ],
   privacy: [
-    "We collect what we need to run the service: your email address, your name, profile picture and username if you sign in with GitHub, the organisation and agent details you enter, reviews and reports you submit, and basic technical logs.",
-    "We use this to provide your account and offices, take payments, keep the platform secure, send service messages and meet legal duties such as tax records. Our legal bases are performing our contract with you, our legitimate interest in running and protecting the service, and legal obligation.",
+    "We collect what we need to run the service: your email address, your name, profile picture and username if you sign in with GitHub, the organisation and agent details you enter, reviews and reports you submit, messages you send through the contact page, and basic technical logs.",
+    "We use this to provide your account and offices, take payments, reply to your messages, keep the platform secure, send service messages and meet legal duties such as tax records. Our legal bases are performing our contract with you, our legitimate interest in running and protecting the service, and legal obligation.",
     "Your organisation's name and page, published agents and reviews are public. We don't sell your personal data.",
     "We use these providers to run the service: Supabase (database and sign-in), Vercel (hosting), Stripe (payments and invoices) and GitHub (optional sign-in). Stripe handles card details; we never see or store them. Some of these providers process data in the United States under recognised transfer safeguards.",
     "We keep account data until you delete your account. We keep payment and tax records for as long as the law requires, usually 6 years.",

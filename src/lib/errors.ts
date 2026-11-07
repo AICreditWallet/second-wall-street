@@ -28,6 +28,8 @@ const MESSAGES: Record<string, string> = {
   review_target_unavailable: "This listing can't be reviewed right now.",
   not_review_target_owner: "Only the owners can respond to this review.",
   not_moderator: "Only moderators can do that.",
+  contact_rate_limited: "We've received several messages from this address recently. Please try again in an hour.",
+  contact_invalid: "Please check your email address, subject and message.",
 };
 
 export function friendlyError(error: { message?: string; code?: string } | null | undefined): string {
