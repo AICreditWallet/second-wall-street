@@ -6,6 +6,7 @@ import { stripeMode } from "@/lib/billing/stripe";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PageShell } from "@/components/site/page-shell";
 import { Badge } from "@/components/ui/badge";
+import { AdminPeople } from "./people";
 import { moderateReview, resolveReport, suspendAgent } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -159,6 +160,8 @@ export default async function AdminPage() {
           )}
         </section>
       )}
+
+      {isAdmin && <AdminPeople db={db} />}
 
       <section aria-labelledby="rep-h" className="mt-12">
         <h2 id="rep-h" className="text-lg font-semibold">

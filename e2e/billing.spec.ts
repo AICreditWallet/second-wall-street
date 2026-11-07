@@ -29,4 +29,12 @@ test.describe("pricing and paid offices (public)", () => {
     await page.goto("/admin");
     await expect(page).toHaveURL(/\/sign-in\?next=%2Fadmin/);
   });
+
+  test("the contact page shows a form and validates it", async ({ page }) => {
+    await page.goto("/contact");
+    await expect(page.getByRole("heading", { level: 1, name: "How can we help?" })).toBeVisible();
+    await page.getByRole("button", { name: "Send message" }).click();
+    await expect(page.getByText("Enter a valid email address")).toBeVisible();
+    await expect(page.getByRole("contentinfo").getByRole("link", { name: "Help & contact" })).toHaveAttribute("href", "/contact");
+  });
 });

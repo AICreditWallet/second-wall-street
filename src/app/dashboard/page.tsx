@@ -42,6 +42,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     ? await supabase.from("office_purchases").select("id, office_id, kind, status, amount_minor, currency, current_period_end, cancel_at_period_end, created_at").neq("status", "expired").order("created_at", { ascending: false }).limit(20)
     : { data: null };
   const purchases = purchaseRows ?? [];
+  const { data: isStaff } = supabase ? await supabase.rpc("is_moderator") : { data: false };
   const paidOffices = new Set(purchases.filter((p) => p.status === "active" || p.status === "past_due").map((p) => p.office_id as string));
 
   const steps = [
@@ -215,8 +216,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               </li>
             ))}
           </ol>
-          <div className="mt-6 border-t border-line pt-4 text-sm">
-            <Link href="/account" className="text-fg-muted hover:text-fg">
+          <div className="mt-6 space-y-2 border-t border-line pt-4 text-sm">
+            {isStaff && (
+              <Link href="/admin" className="block text-fg-muted hover:text-fg">
+                Admin dashboard →
+              </Link>
+            )}
+            <Link href="/account" className="block text-fg-muted hover:text-fg">
               Account settings →
             </Link>
           </div>

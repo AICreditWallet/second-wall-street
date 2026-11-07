@@ -15,7 +15,8 @@ create table auth.users (
   email text,
   email_confirmed_at timestamptz,
   raw_user_meta_data jsonb default '{}'::jsonb,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  last_sign_in_at timestamptz
 );
 
 -- Same definition as Supabase (tolerates an unset or empty claims setting).
