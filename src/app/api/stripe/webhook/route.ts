@@ -40,6 +40,8 @@ export async function POST(req: Request) {
       case "checkout.session.completed":
       case "checkout.session.async_payment_succeeded": {
         const s = event.data.object;
+        // The Stripe account may serve other products; only our checkouts carry a purchase id.
+        if (!s.metadata?.purchase_id) break;
         if (s.payment_status !== "paid" && s.payment_status !== "no_payment_required") break;
         const subId = idOf(s.subscription);
         const sub = subId ? await stripe.subscriptions.retrieve(subId) : null;

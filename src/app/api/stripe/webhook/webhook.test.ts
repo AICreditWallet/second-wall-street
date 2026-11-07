@@ -35,14 +35,20 @@ describe("Stripe webhook", () => {
   });
 
   it("hands over the office for a paid one-time checkout", async () => {
-    const res = await POST(signed(event("checkout.session.completed", { id: "cs_test_1", object: "checkout.session", payment_status: "paid", customer: "cus_1", subscription: null, payment_intent: "pi_1" })));
+    const res = await POST(signed(event("checkout.session.completed", { id: "cs_test_1", object: "checkout.session", payment_status: "paid", customer: "cus_1", subscription: null, payment_intent: "pi_1", metadata: { purchase_id: "p1" } })));
     expect(res.status).toBe(200);
     expect(rpc).toHaveBeenCalledWith("billing_activate", { p_session: "cs_test_1", p_customer: "cus_1", p_subscription: null, p_payment_intent: "pi_1", p_period_end: null });
     expect(rpc).toHaveBeenCalledWith("billing_record_event", { p_id: "evt_123", p_type: "checkout.session.completed" });
   });
 
   it("ignores checkouts that aren't paid yet", async () => {
-    await POST(signed(event("checkout.session.completed", { id: "cs_test_2", payment_status: "unpaid", payment_intent: "pi_2" })));
+    await POST(signed(event("checkout.session.completed", { id: "cs_test_2", payment_status: "unpaid", payment_intent: "pi_2", metadata: { purchase_id: "p2" } })));
+    expect(rpc).not.toHaveBeenCalledWith("billing_activate", expect.anything());
+  });
+
+  it("ignores paid checkouts from other products on the same Stripe account", async () => {
+    const res = await POST(signed(event("checkout.session.completed", { id: "cs_other", payment_status: "paid", payment_intent: "pi_other", metadata: {} })));
+    expect(res.status).toBe(200);
     expect(rpc).not.toHaveBeenCalledWith("billing_activate", expect.anything());
   });
 
