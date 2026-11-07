@@ -65,7 +65,8 @@ test.describe("security", () => {
   });
 
   test("rejects malformed ids", async ({ request }) => {
-    expect((await request.get("/claim/../../etc/passwd")).status()).toBe(404);
+    // Locally the app returns 404; in production Vercel's firewall blocks traversal with 403 first.
+    expect([403, 404]).toContain((await request.get("/claim/../../etc/passwd")).status());
     expect((await request.get("/buildings/bld-xx-999")).status()).toBe(404);
   });
 });
